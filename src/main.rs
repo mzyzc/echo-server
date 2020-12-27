@@ -1,7 +1,7 @@
 use std::net::{TcpListener, TcpStream};
 
 fn main() -> std::io::Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:63100")?;
+    let listener = TcpListener::bind("0.0.0.0:63100")?;
     println!("Listening on port 63100");
 
     for stream in listener.incoming() {
