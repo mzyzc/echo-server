@@ -1,3 +1,4 @@
+use std::thread;
 use std::net::{TcpListener, TcpStream};
 
 fn main() -> std::io::Result<()> {
@@ -5,11 +6,21 @@ fn main() -> std::io::Result<()> {
     println!("Listening on port 63100");
 
     for stream in listener.incoming() {
-        handle_client(stream?);
+        match stream {
+            Ok(stream) => {
+                println!("Successful connection from {}", stream.peer_addr().unwrap());
+                thread::spawn(move|| {
+                    handle_client(stream);
+                });
+            }
+            Err(e) => {
+                println!("Error: {}", e);
+            }
+        }
     }
     Ok(())
 }
 
-fn handle_client(stream: TcpStream) {
-    println!("Successful connection from {}", stream.peer_addr().unwrap().to_string());
+fn handle_client(mut stream: TcpStream) {
+    loop {}
 }
