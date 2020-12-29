@@ -11,10 +11,10 @@ fn main() -> std::io::Result<()> {
         match stream {
             Ok(stream) => {
                 let address = stream.peer_addr().unwrap();
-                println!("{:?} Successful connection from {}", time::SystemTime::now(), address);
+                println!("Successful connection from {}", address);
                 thread::spawn(move || {
                     handle_client(stream);
-                    println!("{:?} Disconnected {}", time::SystemTime::now(), address);
+                    println!("Disconnected {}", address);
                 });
             }
             Err(e) => {
@@ -34,7 +34,7 @@ fn handle_client(mut stream: TcpStream) {
                 if d == 0 {
                     break;
                 } else {
-                    println!("{:?} Data received", time::SystemTime::now());
+                    println!("Data received");
                 }
             },
             Err(_) => thread::sleep(time::Duration::from_secs(5)),
