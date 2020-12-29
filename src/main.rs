@@ -1,7 +1,7 @@
 use std::thread;
 use std::time;
 use std::io::prelude::*;
-use std::net::{Shutdown, TcpListener, TcpStream};
+use std::net::{TcpListener, TcpStream};
 
 fn main() -> std::io::Result<()> {
     let listener = TcpListener::bind("0.0.0.0:63100")?;
@@ -11,14 +11,14 @@ fn main() -> std::io::Result<()> {
         match stream {
             Ok(stream) => {
                 let address = stream.peer_addr().unwrap();
-                println!("Successful connection from {}", address);
+                println!("{:?} Successful connection from {}", time::SystemTime::now(), address);
                 thread::spawn(move || {
                     handle_client(stream);
-                    println!("Disconnected {}", address);
+                    println!("{:?} Disconnected {}", time::SystemTime::now(), address);
                 });
             }
             Err(e) => {
-                println!("Error: {}", e);
+                eprintln!("Error: {}", e);
             }
         }
     }
@@ -34,11 +34,10 @@ fn handle_client(mut stream: TcpStream) {
                 if d == 0 {
                     break;
                 } else {
-                    println!("Data received: {}", d);
+                    println!("{:?} Data received", time::SystemTime::now());
                 }
             },
             Err(_) => thread::sleep(time::Duration::from_secs(5)),
         }
     }
-    stream.shutdown(Shutdown::Both).unwrap();
 }
