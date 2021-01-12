@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 async-std = { version = "1.8.0", features = [ "attributes" ] }
+sqlx = { version = "0.4.2", features = [ "runtime-async-std-rustls", "mysql" ] }
+dotenv = "0.15"
