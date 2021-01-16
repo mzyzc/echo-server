@@ -3,7 +3,7 @@ use std::env;
 use async_std::prelude::*;
 use async_std::net::{TcpListener, TcpStream};
 use async_std::task;
-use sqlx::mysql::MySqlPoolOptions;
+use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use dotenv;
 
 #[async_std::main]
@@ -12,10 +12,12 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
     // Set up database
-    let _pool = MySqlPoolOptions::new()
+    let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&env::var("DATABASE_URL").unwrap())
         .await.expect("Error: could not initialize database");
+
+    init_db(&pool).await;
 
     // Listen for incoming connections
     let socket_addr = format!("{}:{}",
@@ -54,4 +56,18 @@ async fn handle_client(mut stream: TcpStream) {
             Err(_) => task::sleep(interval).await,
         }
     }
+}
+
+async fn init_db(pool: &Pool<Postgres>) {
+    sqlx::query_file!("sql/create-users.sql")
+        .execute(pool)
+        .await.expect("Error: could not execute query");
+
+    sqlx::query_file!("sql/create-conversations.sql")
+        .execute(pool)
+        .await.expect("Error: could not execute query");
+
+    sqlx::query_file!("sql/create-messages.sql")
+        .execute(pool)
+        .await.expect("Error: could not execute query");
 }
