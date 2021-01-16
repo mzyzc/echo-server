@@ -1,6 +1,7 @@
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
-    media_type VARCHAR(50) NOT NULL,
+    data BYTEA NOT NULL,
+    media_type VARCHAR(50),
     time_sent TIMESTAMPTZ,
     signature BYTEA,
     conversation INT references conversations(id) NOT NULL
