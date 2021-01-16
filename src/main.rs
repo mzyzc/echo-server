@@ -17,7 +17,12 @@ async fn main() -> std::io::Result<()> {
         .connect(&env::var("DATABASE_URL").unwrap())
         .await.expect("Error: could not initialize database");
 
-    init_db(&pool).await;
+    if let Ok(b) = env::var("INITIALIZE_DATABASE") {
+        if b == "1" {
+            init_db(&pool).await;
+        }
+    }
+
 
     // Listen for incoming connections
     let socket_addr = format!("{}:{}",
