@@ -1,5 +1,6 @@
 use std::time;
 use std::env;
+use std::net::SocketAddr;
 use async_std::prelude::*;
 use async_std::net::{TcpListener, TcpStream};
 use async_std::task;
@@ -19,19 +20,20 @@ async fn main() -> std::io::Result<()> {
 
     if let Ok(b) = env::var("INITIALIZE_DATABASE") {
         if b == "1" {
+            println!("Initializing database");
             init_db(&pool).await;
         }
     }
 
-
     // Listen for incoming connections
-    let socket_addr = format!("{}:{}",
-        env::var("IP_ADDRESS").unwrap(),
-        env::var("PORT_NUMBER").unwrap());
+    let socket_addr: SocketAddr = format!("{}:{}",
+            env::var("IP_ADDRESS").unwrap_or(String::from("[::]")),
+            env::var("PORT_NUMBER").unwrap_or(String::from("63100")))
+        .parse().expect("Error: could not parse socket address");
 
     let listener = TcpListener::bind(socket_addr).await?;
     let mut incoming = listener.incoming();
-    println!("Listening on port {}", env::var("IP_ADDRESS").unwrap());
+    println!("Listening on port {}", socket_addr.port());
 
     while let Some(stream) = incoming.next().await {
         let stream = stream?;
