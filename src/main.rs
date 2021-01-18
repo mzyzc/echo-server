@@ -37,11 +37,10 @@ async fn main() -> std::io::Result<()> {
 
     while let Some(stream) = incoming.next().await {
         let stream = stream?;
-        let address = stream.peer_addr().unwrap();
-        println!("Successful connection from {}", address);
-        handle_client(stream).await;
-        println!("Disconnected {}", address);
+        println!("Successful connection from {}", stream.peer_addr()?);
+        task::spawn(handle_client(stream));
     }
+
     Ok(())
 }
 
@@ -63,6 +62,7 @@ async fn handle_client(mut stream: TcpStream) {
             Err(_) => task::sleep(interval).await,
         }
     }
+    println!("Disconnected {}", stream.peer_addr().unwrap());
 }
 
 async fn init_db(pool: &Pool<Postgres>) {
