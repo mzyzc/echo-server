@@ -12,9 +12,11 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
     // Create tables if requested
     if let Ok(b) = env::var("INITIALIZE_DATABASE") {
         if b == "1" {
+        /*
         sqlx::query_file!("sql/create-users.sql")
             .execute(&pool)
             .await?;
+        */
 
         sqlx::query_file!("sql/create-conversations.sql")
             .execute(&pool)

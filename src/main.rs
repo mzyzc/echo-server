@@ -1,4 +1,5 @@
 mod database;
+mod requests;
 
 use std::time;
 use std::env;
@@ -41,16 +42,10 @@ async fn handle_client(mut stream: TcpStream) {
 
     // Polling connection
     loop {
-        let data = stream.read(&mut buffer).await;
-        match data {
-            Ok(d) => {
-                if d == 0 {
-                    break;
-                } else {
-                    println!("Data received");
-                }
-            },
-            Err(_) => task::sleep(interval).await,
+        match stream.read(&mut buffer).await {
+            Ok(0) => { break; },
+            Ok(_) => { let _ = requests::parse_request(&buffer[..]); },
+            Err(_) => { task::sleep(interval).await },
         }
     }
     println!("Disconnected {}", stream.peer_addr().unwrap());
