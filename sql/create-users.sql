@@ -1,5 +1,6 @@
 CREATE TABLE users (
-    email VARCHAR(50) PRIMARY KEY NOT NULL,
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(50),
     display_name VARCHAR(32),
     public_key BYTEA NOT NULL,
     pass BYTEA NOT NULL,
