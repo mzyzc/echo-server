@@ -14,6 +14,7 @@ pub enum Target {
     User,
 }
 
+// Canonical form of a request
 pub struct Request {
     pub operation: Operation,
     pub target: Target,
@@ -34,6 +35,7 @@ impl Request {
     }
 }
 
+// Intermediate form of a request
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RawRequest {
@@ -49,6 +51,7 @@ struct RawRequest {
 }
 
 impl RawRequest {
+    // Convert data to canonical form
     fn decode(&self) -> Result<Request, Box<dyn Error>> {
         let split_func: Vec<&str> = self.function
             .split_ascii_whitespace()
