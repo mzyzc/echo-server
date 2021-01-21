@@ -16,13 +16,15 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
     // Prepare database
-    let _pool = database::init_db().await.expect("Could not initialize database");
+    let _pool = database::init_db().await
+        .expect("Could not initialize database");
 
     // Listen for incoming connections
     let socket_addr: SocketAddr = format!("{}:{}",
             env::var("IP_ADDRESS").unwrap_or(String::from("[::]")),
             env::var("PORT_NUMBER").unwrap_or(String::from("63100")))
-        .parse().expect("Could not parse socket address");
+        .parse()
+        .expect("Could not parse socket address");
 
     let listener = TcpListener::bind(socket_addr).await?;
     let mut incoming = listener.incoming();
@@ -46,8 +48,8 @@ async fn handle_client(mut stream: TcpStream) {
     loop {
         match stream.read(&mut buffer).await {
             Ok(0) => { break; },
-            Ok(_) => {let _ = handle::parse_request(&buffer[..]); },
-            Err(_) => { task::sleep(interval).await },
+            Ok(_) => { let _ = handle::parse_request(&buffer[..]); },
+            Err(_) => { task::sleep(interval).await; },
         }
     }
     println!("Disconnected {}", address);
