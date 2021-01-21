@@ -1,5 +1,6 @@
 mod database;
-mod requests;
+mod handle;
+mod request;
 
 use std::time;
 use std::env;
@@ -39,14 +40,15 @@ async fn main() -> std::io::Result<()> {
 async fn handle_client(mut stream: TcpStream) {
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);
+    let address = stream.peer_addr().unwrap();
 
     // Polling connection
     loop {
         match stream.read(&mut buffer).await {
             Ok(0) => { break; },
-            Ok(_) => { let _ = requests::parse_request(&buffer[..]); },
+            Ok(_) => {let _ = handle::parse_request(&buffer[..]); },
             Err(_) => { task::sleep(interval).await },
         }
     }
-    println!("Disconnected {}", stream.peer_addr().unwrap());
+    println!("Disconnected {}", address);
 }
