@@ -10,6 +10,7 @@ use async_std::prelude::*;
 use async_std::net::{TcpListener, TcpStream};
 use async_std::task;
 use dotenv;
+use sqlx::PgPool;
 
 #[async_std::main]
 async fn main() -> std::io::Result<()> {
@@ -17,7 +18,7 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
     // Prepare database
-    let _pool = database::init_db().await
+    let pool = database::init_db().await
         .expect("Could not initialize database");
 
     // Listen for incoming connections
@@ -34,13 +35,14 @@ async fn main() -> std::io::Result<()> {
     while let Some(stream) = incoming.next().await {
         let stream = stream?;
         println!("Successful connection from {}", stream.peer_addr()?);
-        task::spawn(handle_client(stream));
+        task::spawn(
+        handle_client(stream, pool.clone()));
     }
 
     Ok(())
 }
 
-async fn handle_client(mut stream: TcpStream) {
+async fn handle_client(mut stream: TcpStream, db_pool: PgPool) {
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);
     let address = stream.peer_addr().unwrap();
@@ -49,7 +51,7 @@ async fn handle_client(mut stream: TcpStream) {
     loop {
         match stream.read(&mut buffer).await {
             Ok(0) => { break; },
-            Ok(n) => { let _ = handle::parse_request(&buffer[..n]); },
+            Ok(n) => { let _ = handle::parse_request(&buffer[..n], &db_pool); },
             Err(_) => { task::sleep(interval).await; },
         }
     }
