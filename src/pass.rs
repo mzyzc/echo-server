@@ -3,12 +3,12 @@ use argon2rs;
 use getrandom;
 
 pub struct Password {
-    hash: Vec<u8>,
-    salt: Vec<u8>,
+    pub hash: Vec<u8>,
+    pub salt: Vec<u8>,
 }
 
 impl Password {
-    pub fn hash(password: &str) -> Result<Password, Box<dyn Error>> {
+    pub fn hash(password: &str) -> Result<Self, Box<dyn Error>> {
         let mut bytes = vec![0u8; 32];
         getrandom::getrandom(&mut bytes)?;
 
@@ -21,10 +21,10 @@ impl Password {
         })
     }
 
-    pub fn is_valid(self, password: &str) -> bool {
-        let salt = String::from_utf8(self.salt).unwrap();
+    pub fn is_valid(self, password: &str) -> Result<bool, Box<dyn Error>> {
+        let salt = String::from_utf8(self.salt)?;
         let hash = argon2rs::argon2i_simple(password, &salt);
 
-        return hash.to_vec() == self.hash
+        return Ok(hash.to_vec() == self.hash)
     }
 }
