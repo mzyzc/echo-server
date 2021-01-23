@@ -49,7 +49,7 @@ async fn handle_client(mut stream: TcpStream) {
     loop {
         match stream.read(&mut buffer).await {
             Ok(0) => { break; },
-            Ok(_) => { let _ = handle::parse_request(&buffer[..]); },
+            Ok(n) => { let _ = handle::parse_request(&buffer[..n]); },
             Err(_) => { task::sleep(interval).await; },
         }
     }

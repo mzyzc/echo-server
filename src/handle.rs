@@ -6,8 +6,7 @@ use std::str;
 
 pub fn parse_request(data: &[u8]) -> Result<(), Box<dyn Error>> {
     // Prepare data
-    let data = str::from_utf8(data)?
-        .trim_matches('\0');
+    let data = str::from_utf8(data)?;
     let request = Request::from_json(data)?;
 
     match request.operation {
