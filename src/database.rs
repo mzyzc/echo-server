@@ -4,8 +4,12 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
     // Connect to database
+    let max_conns: u32 = env::var("MAX_DB_CONNECTIONS")
+        .unwrap_or(String::from("150"))
+        .parse()?;
+
     let pool = PgPoolOptions::new()
-        .max_connections(5)
+        .max_connections(max_conns)
         .connect(&env::var("DATABASE_URL")?)
         .await?;
 
