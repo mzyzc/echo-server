@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-argon2rs = "0.2.5"
+rust-argon2 = "0.8"
 async-std = { version = "1.8.0", features = [ "attributes" ] }
 base64 = "0.13"
 dotenv = "0.15"

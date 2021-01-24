@@ -1,5 +1,6 @@
 use std::error::Error;
-use argon2rs;
+use std::str;
+use argon2;
 use getrandom;
 
 pub struct Password {
@@ -9,22 +10,25 @@ pub struct Password {
 
 impl Password {
     pub fn hash(password: &str) -> Result<Self, Box<dyn Error>> {
-        let mut bytes = vec![0u8; 32];
-        getrandom::getrandom(&mut bytes)?;
+        let mut salt = vec![0u8; 32];
+        getrandom::getrandom(&mut salt)?;
 
-        let salt = String::from_utf8(bytes)?;
-        let hash = argon2rs::argon2i_simple(password, &salt);
+        let hash = argon2::hash_encoded(
+            password.as_bytes(),
+            &salt,
+            &argon2::Config::default()
+        )?;
 
-        return Ok(Password{
-            hash: hash.to_vec(),
-            salt: salt.into_bytes(),
+        Ok(Password{
+            hash: hash.into_bytes(),
+            salt: salt,
         })
     }
 
-    pub fn is_valid(self, password: &str) -> Result<bool, Box<dyn Error>> {
-        let salt = String::from_utf8(self.salt)?;
-        let hash = argon2rs::argon2i_simple(password, &salt);
+    pub fn is_valid(&self, password: &str) -> Result<bool, Box<dyn Error>> {
+        let hash = str::from_utf8(&self.hash)?;
+        let result = argon2::verify_encoded(hash, password.as_bytes())?;
 
-        return Ok(hash.to_vec() == self.hash)
+        Ok(result)
     }
 }
