@@ -2,6 +2,7 @@ mod database;
 mod handle;
 mod pass;
 mod request;
+mod settings;
 
 use std::time;
 use std::env;

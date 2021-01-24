@@ -1,3 +1,5 @@
+use crate::settings;
+
 use std::env;
 use std::error::Error;
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
@@ -14,30 +16,27 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
         .await?;
 
     // Drop existing tables if requested
-    if let Ok(b) = env::var("DROP_DATABASE") {
-        if b == "1" {
-            sqlx::query_file!("sql/tables/drop.sql")
-                .execute(&pool)
-                .await?;
-        }
+    if settings::is_enabled("DROP_DATABASE") {
+        sqlx::query_file!("sql/tables/drop.sql")
+            .execute(&pool)
+            .await?;
         println!("Existing tables dropped");
     }
 
     // Create tables if requested
-    if let Ok(b) = env::var("INITIALIZE_DATABASE") {
-        if b == "1" {
-            sqlx::query_file!("sql/tables/users.sql")
-                .execute(&pool)
-                .await?;
+    if settings::is_enabled("CREATE_DATABASE") {
+        sqlx::query_file!("sql/tables/users.sql")
+            .execute(&pool)
+            .await?;
 
-            sqlx::query_file!("sql/tables/conversations.sql")
-                .execute(&pool)
-                .await?;
+        sqlx::query_file!("sql/tables/conversations.sql")
+            .execute(&pool)
+            .await?;
 
-            sqlx::query_file!("sql/tables/messages.sql")
-                .execute(&pool)
-                .await?;
-        }
+        sqlx::query_file!("sql/tables/messages.sql")
+            .execute(&pool)
+            .await?;
+
         println!("New tables created");
     }
 
