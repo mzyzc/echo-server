@@ -11,12 +11,14 @@ use async_std::prelude::*;
 use async_std::net::{TcpListener, TcpStream};
 use async_std::task;
 use dotenv;
+use log::{info};
 use sqlx::PgPool;
 
 #[async_std::main]
 async fn main() -> std::io::Result<()> {
-    // Import environmental variables
+    // Setup
     dotenv::dotenv().ok();
+    env_logger::init();
 
     // Prepare database
     let pool = database::init_db().await
@@ -31,11 +33,11 @@ async fn main() -> std::io::Result<()> {
 
     let listener = TcpListener::bind(socket_addr).await?;
     let mut incoming = listener.incoming();
-    println!("Listening on port {}", socket_addr.port());
+    info!("Listening on port {}", socket_addr.port());
 
     while let Some(stream) = incoming.next().await {
         let stream = stream?;
-        println!("Successful connection from {}", stream.peer_addr()?);
+        info!("Successful connection from {}", stream.peer_addr()?);
         task::spawn(
         handle_client(stream, pool.clone()));
     }
@@ -56,5 +58,5 @@ async fn handle_client(mut stream: TcpStream, db_pool: PgPool) {
             Err(_) => { task::sleep(interval).await; },
         }
     }
-    println!("Disconnected {}", address);
+    info!("Disconnected {}", address);
 }

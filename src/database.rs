@@ -2,6 +2,7 @@ use crate::settings;
 
 use std::env;
 use std::error::Error;
+use log::{info};
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
@@ -21,7 +22,7 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
             .execute(&pool)
             .await?;
 
-        println!("Existing tables dropped");
+        info!("Existing tables dropped");
     }
 
     // Create tables if requested
@@ -38,7 +39,7 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
             .execute(&pool)
             .await?;
 
-        println!("New tables created");
+        info!("New tables created");
     }
 
     Ok(pool)

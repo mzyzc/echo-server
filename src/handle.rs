@@ -3,6 +3,7 @@ use crate::request::{Request, Operation, Target};
 
 use std::error::Error;
 use std::str;
+use log::{debug};
 use sqlx::PgPool;
 
 pub async fn parse_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
@@ -15,7 +16,7 @@ pub async fn parse_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn 
         Operation::Create => {
             match request.target {
                 Target::Message => {
-                    println!("undefined");
+                    debug!("undefined");
                 }
                 Target::User => {
                     // Salt and hash password
@@ -39,30 +40,30 @@ pub async fn parse_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn 
         Operation::Read => {
             match request.target {
                 Target::Message => {
-                    println!("undefined");
+                    debug!("undefined");
                 }
                 Target::User => {
-                    println!("undefined");
+                    debug!("undefined");
                 }
             }
         },
         Operation::Update => {
             match request.target {
                 Target::Message => {
-                    println!("undefined");
+                    debug!("undefined");
                 }
                 Target::User => {
-                    println!("undefined");
+                    debug!("undefined");
                 }
             }
         },
         Operation::Delete => {
             match request.target {
                 Target::Message => {
-                    println!("undefined");
+                    debug!("undefined");
                 }
                 Target::User => {
-                    println!("undefined");
+                    debug!("undefined");
                 }
             }
         },
