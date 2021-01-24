@@ -20,6 +20,7 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
         sqlx::query_file!("sql/tables/drop.sql")
             .execute(&pool)
             .await?;
+
         println!("Existing tables dropped");
     }
 

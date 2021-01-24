@@ -10,6 +10,7 @@ pub async fn parse_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn 
     let data = str::from_utf8(data)?;
     let request = Request::from_json(data)?;
 
+    // Identify type of request
     match request.operation {
         Operation::Create => {
             match request.target {
@@ -17,11 +18,13 @@ pub async fn parse_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn 
                     println!("undefined");
                 }
                 Target::User => {
+                    // Salt and hash password
                     let password = match request.password {
                         Some(p) => Password::hash(&p)?,
                         None => return Err("Could not hash password".into()),
                     };
 
+                    // Store user data
                     sqlx::query_file!("sql/create-user.sql",
                             request.email,
                             request.display_name,
