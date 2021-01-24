@@ -51,7 +51,7 @@ async fn handle_client(mut stream: TcpStream, db_pool: PgPool) {
     loop {
         match stream.read(&mut buffer).await {
             Ok(0) => { break; },
-            Ok(n) => { let _ = handle::parse_request(&buffer[..n], &db_pool); },
+            Ok(n) => { let _ = handle::parse_request(&buffer[..n], &db_pool).await; },
             Err(_) => { task::sleep(interval).await; },
         }
     }

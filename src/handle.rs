@@ -22,13 +22,12 @@ pub async fn parse_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn 
                         None => return Err("Could not hash password".into()),
                     };
 
-                    // TODO: Error handling
-                    sqlx::query_file!("sql/create-users.sql")
-                        .bind(request.email.unwrap())
-                        .bind(request.display_name.unwrap())
-                        .bind(request.public_key.unwrap())
-                        .bind(password.hash)
-                        .bind(password.salt)
+                    sqlx::query_file!("sql/create-user.sql",
+                            request.email,
+                            request.display_name,
+                            request.public_key,
+                            password.hash,
+                            password.salt)
                         .execute(db_pool)
                         .await?;
                 }
