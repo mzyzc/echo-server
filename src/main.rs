@@ -3,20 +3,22 @@ mod handle;
 mod pass;
 mod request;
 mod settings;
+mod tls;
 
 use std::time;
 use std::env;
+use std::error::Error;
 use std::net::SocketAddr;
 use async_std::prelude::*;
 use async_std::net::{TcpListener, TcpStream};
 use async_std::task;
+use async_tls::TlsAcceptor;
 use dotenv;
-use log::{info};
+use log::{error, info};
 use sqlx::PgPool;
 
 #[async_std::main]
 async fn main() -> std::io::Result<()> {
-    // Setup
     dotenv::dotenv().ok();
     env_logger::init();
 
@@ -31,32 +33,48 @@ async fn main() -> std::io::Result<()> {
         .parse()
         .expect("Could not parse socket address");
 
+    let acceptor = tls::get_acceptor()
+        .expect("Could not accept TLS handshake");
+
     let listener = TcpListener::bind(socket_addr).await?;
     let mut incoming = listener.incoming();
     info!("Listening on port {}", socket_addr.port());
 
     while let Some(stream) = incoming.next().await {
         let stream = stream?;
+        let acceptor = acceptor.clone();
+        let pool = pool.clone();
         info!("Successful connection from {}", stream.peer_addr()?);
-        task::spawn(
-        handle_client(stream, pool.clone()));
+        task::spawn(async move {
+            let result = handle_client(stream, &acceptor, &pool).await;
+            if let Err(e) = result {
+                error!("{}", e);
+            }
+        });
     }
 
     Ok(())
 }
 
-async fn handle_client(mut stream: TcpStream, db_pool: PgPool) {
+async fn handle_client(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);
     let address = stream.peer_addr().unwrap();
+
+    // Perform TLS handshake
+    let handshake = acceptor.accept(stream);
+    let mut stream = handshake.await?;
 
     // Polling connection
     loop {
         match stream.read(&mut buffer).await {
             Ok(0) => { break; },
-            Ok(n) => { let _ = handle::parse_request(&buffer[..n], &db_pool).await; },
+            Ok(n) => { let _ = handle::parse_request(&buffer[..n], db_pool).await; },
             Err(_) => { task::sleep(interval).await; },
         }
     }
+
+    stream.flush();
     info!("Disconnected {}", address);
+    Ok(())
 }

@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 rust-argon2 = "0.8"
 async-std = { version = "1.8.0", features = [ "attributes" ] }
+async-tls = { version = "0.11", features = [ "server" ] }
 base64 = "0.13"
 dotenv = "0.15"
 env_logger = "0.8.2"
@@ -17,3 +18,4 @@ log = { version = "0.4", features = [ "std", "serde" ] }
 sqlx = { version = "0.4.2", features = [ "runtime-async-std-rustls", "postgres" ] }
 serde = { version = "1.0", features = [ "derive" ] }
 serde_json = "1.0"
+rustls = { version = "0.19", features = [ "logging" ] }
