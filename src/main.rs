@@ -33,7 +33,7 @@ async fn main() -> std::io::Result<()> {
         .parse()
         .expect("Could not parse socket address");
 
-    let acceptor = tls::get_acceptor()
+    let acceptor = tls::get_acceptor().await
         .expect("Could not accept TLS handshake");
 
     let listener = TcpListener::bind(socket_addr).await?;
@@ -64,6 +64,7 @@ async fn handle_client(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPo
     // Perform TLS handshake
     let handshake = acceptor.accept(stream);
     let mut stream = handshake.await?;
+    info!("Handshake successful");
 
     // Polling connection
     loop {
