@@ -7,6 +7,7 @@ pub enum Operation {
     Read,
     Update,
     Delete,
+    Verify,
 }
 
 pub enum Target {
@@ -59,6 +60,7 @@ impl RawRequest {
 
         return Ok(Request{
             operation: match split_func[0] {
+                "VERIFY" => Operation::Verify,
                 "CREATE" => Operation::Create,
                 "READ" => Operation::Read,
                 "UPDATE" => Operation::Update,

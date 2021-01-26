@@ -9,7 +9,20 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn hash(password: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn with_salt(password: &str, salt: &[u8]) -> Result<Self, Box<dyn Error>> {
+        let hash = argon2::hash_encoded(
+            &password.as_bytes(),
+            salt,
+            &argon2::Config::default()
+        )?;
+
+        Ok(Password{
+            hash: hash.into_bytes(),
+            salt: salt.to_owned(),
+        })
+    }
+
+    pub fn without_salt(password: &str) -> Result<Self, Box<dyn Error>> {
         let mut salt = vec![0u8; 32];
         getrandom::getrandom(&mut salt)?;
 

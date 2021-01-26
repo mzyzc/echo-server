@@ -1,0 +1,1 @@
+SELECT pass, salt FROM users WHERE email = $1

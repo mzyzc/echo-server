@@ -1,6 +1,6 @@
+mod auth;
 mod database;
 mod handle;
-mod pass;
 mod request;
 mod settings;
 mod tls;
@@ -46,7 +46,7 @@ async fn main() -> std::io::Result<()> {
         let pool = pool.clone();
         info!("Successful connection from {}", stream.peer_addr()?);
         task::spawn(async move {
-            let result = handle_client(stream, &acceptor, &pool).await;
+            let result = handle_connection(stream, &acceptor, &pool).await;
             if let Err(e) = result {
                 error!("{}", e);
             }
@@ -56,7 +56,7 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-async fn handle_client(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);
     let address = stream.peer_addr().unwrap();
@@ -69,9 +69,14 @@ async fn handle_client(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPo
     // Polling connection
     loop {
         match stream.read(&mut buffer).await {
-            Ok(0) => { break; },
-            Ok(n) => { let _ = handle::parse_request(&buffer[..n], db_pool).await; },
-            Err(_) => { task::sleep(interval).await; },
+            Ok(0) => break,
+            Ok(n) => {
+                let result = handle::handle_request(&buffer[..n], db_pool).await;
+                if let Err(e) = result {
+                    error!("{}", e);
+                }
+            },
+            Err(_) => task::sleep(interval).await,
         }
     }
 
