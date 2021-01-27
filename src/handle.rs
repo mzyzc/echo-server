@@ -2,6 +2,8 @@ use crate::auth::Password;
 use crate::request::{Request, Operation, Target};
 
 use std::error::Error;
+use std::io::Error as ioErr;
+use std::io::ErrorKind as ioErrKind;
 use std::str;
 use sqlx::PgPool;
 
@@ -15,46 +17,53 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn
     match request.operation {
         Operation::Verify => {
             match request.target {
-                Target::User => {
+                Target::User => {  // VERIFY USER
+                    let email = request.email
+                        .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
+                    let password = request.password
+                        .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
+
                     // Retrieve credentials from database
-                    let stream = sqlx::query_file!("sql/verify-user.sql", request.email)
+                    let stream = sqlx::query_file!("sql/verify-user.sql", email)
                         .fetch_one(db_pool)
                         .await?;
 
-                    let password = Password{hash: stream.pass, salt: stream.salt};
+                    let thing = Password{hash: stream.pass, salt: stream.salt};
 
                     // Compare password to user input
-                    let result = match request.password {
-                        Some(p) => password.is_valid(&p)?,
-                        None => return Err("Missing 'password' field".into()),
-                    };
-                    match result {
-                        true => { user = Some(request.email.unwrap()) },
-                        false => return Err("Invalid password".into()),
+                    match thing.is_valid(&password)? {
+                        true => { user = Some(email) },
+                        false => return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Invalid password"))),
                     };
                 }
-                Target::Message => {
-                    return Err("Invalid operation".into());
+                Target::Message => {  // VERIFY MESSAGE
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
         },
         Operation::Create => {
             match request.target {
-                Target::Message => {
-                    return Err("Invalid operation".into());
+                Target::Message => {  // CREATE MESSAGE
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
-                Target::User => {
+                Target::User => {  // CREATE USER
+                    let email = request.email
+                        .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
+                    let display_name = request.display_name
+                        .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'display_name' field"))?;
+                    let password = request.password
+                        .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
+                    let public_key = request.public_key
+                        .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'public_key' field"))?;
+
                     // Salt and hash password
-                    let password = match request.password {
-                        Some(p) => Password::without_salt(&p)?,
-                        None => return Err("Missing 'password' field".into()),
-                    };
+                    let password = Password::hash(&password, Option::None)?;
 
                     // Store user data
                     sqlx::query_file!("sql/create-user.sql",
-                            request.email,
-                            request.display_name,
-                            request.public_key,
+                            email,
+                            display_name,
+                            public_key,
                             password.hash,
                             password.salt)
                         .execute(db_pool)
@@ -64,31 +73,31 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn
         },
         Operation::Read => {
             match request.target {
-                Target::Message => {
-                    return Err("Invalid operation".into());
+                Target::Message => {  // READ MESSAGE
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
-                Target::User => {
-                    return Err("Invalid operation".into());
+                Target::User => {  // READ USER
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
         },
         Operation::Update => {
             match request.target {
-                Target::Message => {
-                    return Err("Invalid operation".into());
+                Target::Message => {  // UPDATE MESSAGE
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
-                Target::User => {
-                    return Err("Invalid operation".into());
+                Target::User => {  // UPDATE USER
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
         },
         Operation::Delete => {
             match request.target {
-                Target::Message => {
-                    return Err("Invalid operation".into());
+                Target::Message => {  // DELETE MESSAGE
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
-                Target::User => {
-                    return Err("Invalid operation".into());
+                Target::User => {  // DELETE USER
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
         },
