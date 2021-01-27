@@ -24,7 +24,7 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn
                         .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
 
                     // Retrieve credentials from database
-                    let stream = sqlx::query_file!("sql/verify-user.sql", email)
+                    let stream = sqlx::query_file!("src/sql/verify-user.sql", email)
                         .fetch_one(db_pool)
                         .await?;
 
@@ -60,7 +60,7 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn
                     let password = Password::hash(&password, Option::None)?;
 
                     // Store user data
-                    sqlx::query_file!("sql/create-user.sql",
+                    sqlx::query_file!("src/sql/create-user.sql",
                             email,
                             display_name,
                             public_key,

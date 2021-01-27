@@ -18,7 +18,7 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
 
     // Drop existing tables if requested
     if settings::is_enabled("DROP_DATABASE") {
-        sqlx::query_file!("sql/tables/drop.sql")
+        sqlx::query_file!("src/sql/tables/drop.sql")
             .execute(&pool)
             .await?;
 
@@ -27,15 +27,15 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
 
     // Create tables if requested
     if settings::is_enabled("CREATE_DATABASE") {
-        sqlx::query_file!("sql/tables/users.sql")
+        sqlx::query_file!("src/sql/tables/users.sql")
             .execute(&pool)
             .await?;
 
-        sqlx::query_file!("sql/tables/conversations.sql")
+        sqlx::query_file!("src/sql/tables/conversations.sql")
             .execute(&pool)
             .await?;
 
-        sqlx::query_file!("sql/tables/messages.sql")
+        sqlx::query_file!("src/sql/tables/messages.sql")
             .execute(&pool)
             .await?;
 
