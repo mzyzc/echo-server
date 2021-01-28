@@ -7,11 +7,10 @@ use std::io::ErrorKind as ioErrKind;
 use std::str;
 use sqlx::PgPool;
 
-pub async fn handle_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+pub async fn handle_request(data: &[u8], db_pool: &PgPool, user: &mut Option<String>) -> Result<(), Box<dyn Error>> {
     // Prepare data
     let data = str::from_utf8(data)?;
     let request = Request::from_json(data)?;
-    let mut user: Option<String> = Option::None;
 
     // Identify type of request
     match request.operation {
@@ -32,7 +31,7 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool) -> Result<(), Box<dyn
 
                     // Compare password to user input
                     match thing.is_valid(&password)? {
-                        true => { user = Some(email) },
+                        true => { *user = Some(email) },
                         false => return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Invalid password"))),
                     };
                 }
