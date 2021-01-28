@@ -1,5 +1,5 @@
 use crate::auth::Password;
-use crate::request::{Request, Operation, Target};
+use crate::api::{Request, Operation, Target};
 
 use std::error::Error;
 use std::io::Error as ioErr;
