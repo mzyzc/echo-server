@@ -35,6 +35,10 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
             .execute(&pool)
             .await?;
 
+        sqlx::query_file!("src/sql/tables/participants.sql")
+            .execute(&pool)
+            .await?;
+
         sqlx::query_file!("src/sql/tables/messages.sql")
             .execute(&pool)
             .await?;

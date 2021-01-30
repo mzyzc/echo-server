@@ -3,6 +3,18 @@ use std::str;
 use argon2;
 use getrandom;
 
+pub struct UserAuth {
+    pub email: Option<String>,
+    pub is_authenticated: bool,
+}
+
+impl UserAuth {
+    pub fn authenticate(&mut self, email: String) {
+        self.email = Some(email);
+        self.is_authenticated = true;
+    }
+}
+
 pub struct Password {
     pub hash: Vec<u8>,
     pub salt: Vec<u8>,

@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS users, messages, conversations
+DROP TABLE IF EXISTS messages, participants, conversations, users CASCADE

@@ -60,7 +60,10 @@ async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);
     let address = stream.peer_addr().unwrap();
-    let mut user = Option::None;
+    let mut user = auth::UserAuth{
+        email: None,
+        is_authenticated: false,
+    };
 
     // Perform TLS handshake
     let handshake = acceptor.accept(stream);
@@ -72,8 +75,8 @@ async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &
         match stream.read(&mut buffer).await {
             Ok(0) => break,
             Ok(n) => {
-                println!("{:?}", user);
-                let result = requests::handle_request(&buffer[..n], db_pool, &mut user).await;
+                println!("{:?}", user.email);
+                let result = requests::handle_request(&buffer[..n], &mut user, db_pool).await;
                 if let Err(e) = result {
                     error!("{}", e);
                 }
