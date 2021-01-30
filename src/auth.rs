@@ -40,7 +40,7 @@ impl Password {
 
         Ok(Password{
             hash: hash.into_bytes(),
-            salt: salt,
+            salt,
         })
     }
 

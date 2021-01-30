@@ -16,9 +16,9 @@ pub enum Operation {
 }
 
 pub enum Target {
-    Conversations,
-    Messages,
-    Users,
+    Conversation,
+    Message,
+    User,
 }
 
 // Canonical form of a request
@@ -109,7 +109,7 @@ impl Request {
         Ok(())
     }
 
-    pub async fn read_conversations(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_conversation(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !user.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
@@ -119,7 +119,7 @@ impl Request {
         Ok(())
     }
 
-    pub async fn read_messages(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_message(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !user.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
@@ -129,7 +129,7 @@ impl Request {
         Ok(())
     }
 
-    pub async fn read_users(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_user(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !user.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
@@ -169,44 +169,45 @@ impl RawRequest {
                 "READ" => Operation::Read,
                 "UPDATE" => Operation::Update,
                 "DELETE" => Operation::Delete,
-                _ => return Err(format!("Request did not match any known operations").into()),
+                _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown request"))),
             },
             target: match split_func[1] {
-                "MESSAGE" => Target::Messages,
-                "USER" => Target::Users,
-                _ => return Err(format!("Request did not match any known targets").into()),
+                "CONVERSATION" => Target::Conversation,
+                "MESSAGE" => Target::Message,
+                "USER" => Target::User,
+                _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown target"))),
             },
             data: match &self.data {
                 Some(d) => Some(base64::decode(d)?),
-                _ => None,
+                None => None,
             },
             display_name: match &self.display_name {
                 Some(d) => Some(String::from(d)),
-                _ => None,
+                None => None,
             },
             email: match &self.email {
                 Some(d) => Some(String::from(d)),
-                _ => None,
+                None => None,
             },
             media_type: match &self.media_type {
                 Some(d) => Some(base64::decode(d)?),
-                _ => None,
+                None => None,
             },
             password: match &self.password {
                 Some(d) => Some(String::from(d)),
-                _ => None,
+                None => None,
             },
             public_key: match &self.public_key {
                 Some(d) => Some(base64::decode(d)?),
-                _ => None,
+                None => None,
             },
             signature: match &self.signature {
                 Some(d) => Some(base64::decode(d)?),
-                _ => None,
+                None => None,
             },
             timestamp: match &self.timestamp {
                 Some(d) => Some(base64::decode(d)?),
-                _ => None,
+                None => None,
             },
         })
     }
