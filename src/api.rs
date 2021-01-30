@@ -11,8 +11,9 @@ pub enum Operation {
 }
 
 pub enum Target {
-    Message,
-    User,
+    Conversations,
+    Messages,
+    Users,
 }
 
 // Canonical form of a request
@@ -68,8 +69,8 @@ impl RawRequest {
                 _ => return Err(format!("Request did not match any known operations").into()),
             },
             target: match split_func[1] {
-                "MESSAGE" => Target::Message,
-                "USER" => Target::User,
+                "MESSAGE" => Target::Messages,
+                "USER" => Target::Users,
                 _ => return Err(format!("Request did not match any known targets").into()),
             },
             data: match &self.data {

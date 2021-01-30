@@ -4,5 +4,5 @@ CREATE TABLE messages (
     media_type BYTEA,
     timestamp BYTEA,
     signature BYTEA,
-    conversation INT references conversations(id) NOT NULL
+    sender INT references participants(id) NOT NULL
 )

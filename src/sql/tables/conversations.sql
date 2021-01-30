@@ -1,6 +1,5 @@
 CREATE TABLE conversations (
     id SERIAL PRIMARY KEY,
-    sender INT references users(id) NOT NULL,
-    recipient INT references users(id) NOT NULL,
+    name VARCHAR(50) NOT NULL,
     timestamp BYTEA
 )

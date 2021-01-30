@@ -16,10 +16,10 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool, user: &mut Option<Str
     match request.operation {
         Operation::Verify => {
             match request.target {
-                Target::User => {  // VERIFY USER
+                Target::Users => {  // VERIFY USER
                     let email = request.email
                         .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
-                    let password = request.password
+                    let remote_pass = request.password
                         .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
 
                     // Retrieve credentials from database
@@ -27,29 +27,27 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool, user: &mut Option<Str
                         .fetch_one(db_pool)
                         .await?;
 
-                    let thing = Password{hash: stream.pass, salt: stream.salt};
+                    let local_pass = Password{
+                        hash: stream.pass,
+                        salt: stream.salt
+                    };
 
                     // Compare password to user input
-                    match thing.is_valid(&password)? {
+                    match local_pass.is_valid(&remote_pass)? {
                         true => { *user = Some(email) },
                         false => return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Invalid password"))),
                     };
                 }
-                Target::Message => {  // VERIFY MESSAGE
+                _ => {
                     return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
         },
         Operation::Create => {
             match request.target {
-                Target::Message => {  // CREATE MESSAGE
-                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
-                }
-                Target::User => {  // CREATE USER
+                Target::Users => {  // CREATE USER
                     let email = request.email
                         .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
-                    let display_name = request.display_name
-                        .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'display_name' field"))?;
                     let password = request.password
                         .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
                     let public_key = request.public_key
@@ -61,41 +59,34 @@ pub async fn handle_request(data: &[u8], db_pool: &PgPool, user: &mut Option<Str
                     // Store user data
                     sqlx::query_file!("src/sql/create-user.sql",
                             email,
-                            display_name,
                             public_key,
                             password.hash,
                             password.salt)
                         .execute(db_pool)
                         .await?;
                 }
+                _ => {
+                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
+                }
             }
         },
         Operation::Read => {
             match request.target {
-                Target::Message => {  // READ MESSAGE
-                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
-                }
-                Target::User => {  // READ USER
+                _ => {
                     return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
         },
         Operation::Update => {
             match request.target {
-                Target::Message => {  // UPDATE MESSAGE
-                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
-                }
-                Target::User => {  // UPDATE USER
+                _ => {
                     return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
         },
         Operation::Delete => {
             match request.target {
-                Target::Message => {  // DELETE MESSAGE
-                    return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
-                }
-                Target::User => {  // DELETE USER
+                _ => {
                     return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Invalid operation")));
                 }
             }
