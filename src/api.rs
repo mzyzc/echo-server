@@ -16,18 +16,18 @@ pub enum Operation {
 }
 
 pub enum Target {
-    Conversation,
-    Message,
-    User,
+    Conversations,
+    Messages,
+    Users,
 }
 
 // Canonical form of a request
 pub struct Request {
     pub operation: Operation,
     pub target: Target,
-    user: Option<Vec<data::User>>,
-    message: Option<Vec<data::Message>>,
-    conversation: Option<Vec<data::Conversation>>,
+    users: Option<Vec<data::User>>,
+    messages: Option<Vec<data::Message>>,
+    conversations: Option<Vec<data::Conversation>>,
 }
 
 impl Request {
@@ -55,12 +55,12 @@ impl Request {
                 _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown request"))),
             },
             target: match target.as_ref() {
-                "CONVERSATION" => Target::Conversation,
-                "MESSAGE" => Target::Message,
-                "USER" => Target::User,
+                "CONVERSATIONS" => Target::Conversations,
+                "MESSAGES" => Target::Messages,
+                "USERS" => Target::Users,
                 _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown target"))),
             },
-            user: match data["user"].as_array() {
+            users: match data["users"].as_array() {
                 Some(d) => {
                     let mut users = Vec::new();
                     for item in d.iter() {
@@ -71,7 +71,7 @@ impl Request {
                 },
                 None => None,
             },
-            message: match data["message"].as_array() {
+            messages: match data["messages"].as_array() {
                 Some(d) => {
                     let mut messages = Vec::new();
                     for item in d.iter() {
@@ -82,7 +82,7 @@ impl Request {
                 },
                 None => None,
             },
-            conversation: match data["conversation"].as_array() {
+            conversations: match data["conversations"].as_array() {
                 Some(d) => {
                     let mut conversations = Vec::new();
                     for item in d.iter() {
@@ -98,52 +98,66 @@ impl Request {
         Ok(request)
     }
 
-    pub async fn verify_users(self, user: &mut UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        // TODO
+    pub async fn verify_users(self, login: &mut UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+        let users = self.users
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
 
-        // Retrieve credentials from database
-        /*
-        let stream = sqlx::query_file!("src/sql/verify-user.sql", email)
-            .fetch_one(db_pool)
-            .await?;
+        for user in users {
+            // Retrieve credentials from database
+            let email = user.email
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
+            let remote_pass = user.password
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
 
-        let local_pass = Password{
-            hash: stream.pass,
-            salt: stream.salt
+            let stream = sqlx::query_file!("src/sql/verify-user.sql", email)
+                .fetch_one(db_pool)
+                .await?;
+
+            let local_pass = Password{
+                hash: stream.pass,
+                salt: stream.salt
+            };
+
+            // Compare password to user input
+            match local_pass.is_valid(&remote_pass)? {
+                true => login.authenticate(email),
+                false => return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Invalid password"))),
+            };
         };
-
-        // Compare password to user input
-        match local_pass.is_valid(&remote_pass)? {
-            true => user.authenticate(email),
-            false => return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Invalid password"))),
-        };
-        */
 
         Ok(())
     }
 
-    pub async fn create_user(self, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        // TODO
+    pub async fn create_users(self, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+        let users = self.users
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
 
-        // Salt and hash password
-        /*
-        let password = Password::hash(&password, Option::None)?;
+        for user in users {
+            let email = user.email
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
+            let password = user.password
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
+            let public_key = user.public_key
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'public_key' field"))?;
 
-        // Store user data
-        sqlx::query_file!("src/sql/create-user.sql",
-                email,
-                public_key,
-                password.hash,
-                password.salt)
-            .execute(db_pool)
-            .await?;
-        */
+            // Salt and hash password
+            let password = Password::hash(&password, Option::None)?;
+
+            // Store user data
+            sqlx::query_file!("src/sql/create-user.sql",
+                    email,
+                    public_key,
+                    password.hash,
+                    password.salt)
+                .execute(db_pool)
+                .await?;
+        };
 
         Ok(())
     }
 
-    pub async fn create_conversation(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        if !user.is_authenticated {
+    pub async fn create_conversations(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+        if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
@@ -152,8 +166,8 @@ impl Request {
         Ok(())
     }
 
-    pub async fn create_message(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        if !user.is_authenticated {
+    pub async fn create_messages(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+        if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
@@ -162,8 +176,8 @@ impl Request {
         Ok(())
     }
 
-    pub async fn read_conversation(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        if !user.is_authenticated {
+    pub async fn read_conversations(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+        if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
@@ -172,8 +186,8 @@ impl Request {
         Ok(())
     }
 
-    pub async fn read_message(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        if !user.is_authenticated {
+    pub async fn read_messages(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+        if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
@@ -182,8 +196,8 @@ impl Request {
         Ok(())
     }
 
-    pub async fn read_user(self, user: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        if !user.is_authenticated {
+    pub async fn read_users(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+        if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
