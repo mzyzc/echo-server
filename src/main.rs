@@ -1,5 +1,6 @@
 mod api;
 mod auth;
+mod data;
 mod database;
 mod requests;
 mod settings;

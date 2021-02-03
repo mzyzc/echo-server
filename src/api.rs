@@ -1,10 +1,10 @@
 use crate::auth::{UserAuth, Password};
+use crate::data;
 
 use std::error::Error;
 use std::io::Error as ioErr;
 use std::io::ErrorKind as ioErrKind;
-use base64;
-use serde::Deserialize;
+use serde_json::Value;
 use sqlx::PgPool;
 
 pub enum Operation {
@@ -25,29 +25,84 @@ pub enum Target {
 pub struct Request {
     pub operation: Operation,
     pub target: Target,
-    data: Option<Vec<u8>>,
-    display_name: Option<String>,
-    email: Option<String>,
-    media_type: Option<Vec<u8>>,
-    password: Option<String>,
-    public_key: Option<Vec<u8>>,
-    signature: Option<Vec<u8>>,
-    timestamp: Option<Vec<u8>>,
+    user: Option<Vec<data::User>>,
+    message: Option<Vec<data::Message>>,
+    conversation: Option<Vec<data::Conversation>>,
 }
 
 impl Request {
-    pub fn from_json(data: &str) -> Result<Request, Box<dyn Error>> {
-        let request: RawRequest = serde_json::from_str(data)?;
-        return request.decode()
+    fn split_function(function: &str) -> (String, String) {
+        let split_func: Vec<&str> = function
+            .split_ascii_whitespace()
+            .collect();
+
+        (split_func[0].to_owned(), split_func[1].to_owned())
+    }
+
+    pub fn from_json(data: &str) -> Result<Self, Box<dyn Error>> {
+        let data: Value = serde_json::from_str(data)?;
+
+        let (operation, target) = Self::split_function(data["function"].as_str()
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Invalid request function"))?);
+
+        let request = Self{
+            operation: match operation.as_ref() {
+                "VERIFY" => Operation::Verify,
+                "CREATE" => Operation::Create,
+                "READ" => Operation::Read,
+                "UPDATE" => Operation::Update,
+                "DELETE" => Operation::Delete,
+                _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown request"))),
+            },
+            target: match target.as_ref() {
+                "CONVERSATION" => Target::Conversation,
+                "MESSAGE" => Target::Message,
+                "USER" => Target::User,
+                _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown target"))),
+            },
+            user: match data["user"].as_array() {
+                Some(d) => {
+                    let mut users = Vec::new();
+                    for item in d.iter() {
+                        let user = data::User::from_json(item);
+                        users.push(user);
+                    };
+                    Some(users)
+                },
+                None => None,
+            },
+            message: match data["message"].as_array() {
+                Some(d) => {
+                    let mut messages = Vec::new();
+                    for item in d.iter() {
+                        let message = data::Message::from_json(item);
+                        messages.push(message);
+                    };
+                    Some(messages)
+                },
+                None => None,
+            },
+            conversation: match data["conversation"].as_array() {
+                Some(d) => {
+                    let mut conversations = Vec::new();
+                    for item in d.iter() {
+                        let conversation = data::Conversation::from_json(item);
+                        conversations.push(conversation);
+                    };
+                    Some(conversations)
+                },
+                None => None,
+            },
+        };
+
+        Ok(request)
     }
 
     pub async fn verify_users(self, user: &mut UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        let email = self.email
-            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
-        let remote_pass = self.password
-            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
+        // TODO
 
         // Retrieve credentials from database
+        /*
         let stream = sqlx::query_file!("src/sql/verify-user.sql", email)
             .fetch_one(db_pool)
             .await?;
@@ -62,19 +117,16 @@ impl Request {
             true => user.authenticate(email),
             false => return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Invalid password"))),
         };
+        */
 
         Ok(())
     }
 
     pub async fn create_user(self, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        let email = self.email
-            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field"))?;
-        let password = self.password
-            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'password' field"))?;
-        let public_key = self.public_key
-            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'public_key' field"))?;
+        // TODO
 
         // Salt and hash password
+        /*
         let password = Password::hash(&password, Option::None)?;
 
         // Store user data
@@ -85,6 +137,7 @@ impl Request {
                 password.salt)
             .execute(db_pool)
             .await?;
+        */
 
         Ok(())
     }
@@ -115,7 +168,7 @@ impl Request {
         }
 
         // TODO
-        
+
         Ok(())
     }
 
@@ -137,78 +190,5 @@ impl Request {
         // TODO
 
         Ok(())
-    }
-}
-
-// Intermediate form of a request
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct RawRequest {
-    function: String,
-    data: Option<String>,
-    display_name: Option<String>,
-    email: Option<String>,
-    media_type: Option<String>,
-    password: Option<String>,
-    public_key: Option<String>,
-    signature: Option<String>,
-    timestamp: Option<String>,
-}
-
-impl RawRequest {
-    // Convert data to canonical form
-    fn decode(&self) -> Result<Request, Box<dyn Error>> {
-        let split_func: Vec<&str> = self.function
-            .split_ascii_whitespace()
-            .collect();
-
-        return Ok(Request{
-            operation: match split_func[0] {
-                "VERIFY" => Operation::Verify,
-                "CREATE" => Operation::Create,
-                "READ" => Operation::Read,
-                "UPDATE" => Operation::Update,
-                "DELETE" => Operation::Delete,
-                _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown request"))),
-            },
-            target: match split_func[1] {
-                "CONVERSATION" => Target::Conversation,
-                "MESSAGE" => Target::Message,
-                "USER" => Target::User,
-                _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown target"))),
-            },
-            data: match &self.data {
-                Some(d) => Some(base64::decode(d)?),
-                None => None,
-            },
-            display_name: match &self.display_name {
-                Some(d) => Some(String::from(d)),
-                None => None,
-            },
-            email: match &self.email {
-                Some(d) => Some(String::from(d)),
-                None => None,
-            },
-            media_type: match &self.media_type {
-                Some(d) => Some(base64::decode(d)?),
-                None => None,
-            },
-            password: match &self.password {
-                Some(d) => Some(String::from(d)),
-                None => None,
-            },
-            public_key: match &self.public_key {
-                Some(d) => Some(base64::decode(d)?),
-                None => None,
-            },
-            signature: match &self.signature {
-                Some(d) => Some(base64::decode(d)?),
-                None => None,
-            },
-            timestamp: match &self.timestamp {
-                Some(d) => Some(base64::decode(d)?),
-                None => None,
-            },
-        })
     }
 }
