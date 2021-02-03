@@ -1,5 +1,5 @@
 use crate::api::{Request, Operation, Target};
-use crate::auth::UserAuth;
+use crate::auth::Login;
 
 use std::error::Error;
 use std::io::Error as ioErr;
@@ -7,7 +7,7 @@ use std::io::ErrorKind as ioErrKind;
 use std::str;
 use sqlx::PgPool;
 
-pub async fn handle_request(data: &[u8], user: &mut UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+pub async fn handle_request(data: &[u8], user: &mut Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
     // Prepare data
     let data = str::from_utf8(data)?;
     let request = Request::from_json(data)?;

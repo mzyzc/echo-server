@@ -61,7 +61,7 @@ async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);
     let address = stream.peer_addr().unwrap();
-    let mut user = auth::UserAuth{
+    let mut user = auth::Login{
         email: None,
         is_authenticated: false,
     };

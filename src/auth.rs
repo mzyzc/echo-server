@@ -3,12 +3,12 @@ use std::str;
 use argon2;
 use getrandom;
 
-pub struct UserAuth {
+pub struct Login {
     pub email: Option<String>,
     pub is_authenticated: bool,
 }
 
-impl UserAuth {
+impl Login {
     pub fn authenticate(&mut self, email: String) {
         self.email = Some(email);
         self.is_authenticated = true;

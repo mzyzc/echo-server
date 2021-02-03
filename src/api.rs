@@ -1,4 +1,4 @@
-use crate::auth::{UserAuth, Password};
+use crate::auth::{Login, Password};
 use crate::data;
 
 use std::error::Error;
@@ -98,7 +98,7 @@ impl Request {
         Ok(request)
     }
 
-    pub async fn verify_users(self, login: &mut UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn verify_users(self, login: &mut Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         let users = self.users
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
 
@@ -144,6 +144,7 @@ impl Request {
             let password = Password::hash(&password, Option::None)?;
 
             // Store user data
+            /*
             sqlx::query_file!("src/sql/create-user.sql",
                     email,
                     public_key,
@@ -151,57 +152,133 @@ impl Request {
                     password.salt)
                 .execute(db_pool)
                 .await?;
+            */
         };
 
         Ok(())
     }
 
-    pub async fn create_conversations(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn create_conversations(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
-        // TODO
+        let users = self.users
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
+
+        let conversations = self.conversations
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
+
+        for conversation in conversations {
+            let name = conversation.name
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'name' field"))?;
+
+            let users = users.clone();
+            for user in users {
+                // Store user data
+                /*
+                sqlx::query_file!("src/sql/create-conversation.sql", email, name)
+                    .execute(db_pool)
+                    .await?;
+                */
+            }
+        };
 
         Ok(())
     }
 
-    pub async fn create_messages(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn create_messages(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
-        // TODO
+        let messages = self.messages
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'messages' list"))?;
+        let conversations = self.conversations
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
+
+        for (message, conversation) in messages.iter().zip(conversations.iter()) {
+            let data = message.data.clone()
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'data' field"))?;
+            let media_type = message.media_type.clone()
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'mediaType' field"))?;
+            let timestamp = message.timestamp.clone()
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'timestamp' field"))?;
+            let signature = message.signature.clone()
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'signature' field"))?;
+            let conversation_id = conversation.id
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field"))?;
+
+            // Store user data
+            /*
+            sqlx::query_file!("src/sql/create-message.sql",
+                    data,
+                    media_type,
+                    timestamp,
+                    signature,
+                    login.email)
+                .execute(db_pool)
+                .await?;
+            */
+        };
         
         Ok(())
     }
 
-    pub async fn read_conversations(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_conversations(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
-        // TODO
+        /*
+        sqlx::query_file!("src/sql/read-conversation.sql", login.email)
+            .execute(db_pool)
+            .await?;
+        */
 
         Ok(())
     }
 
-    pub async fn read_messages(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_messages(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
-        // TODO
+        let conversations = self.conversations
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
+
+        for conversation in conversations {
+            let id = conversation.id
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field"))?;
+
+            /*
+            sqlx::query_file!("src/sql/read-message.sql", conversation.id, login.email)
+                .execute(db_pool)
+                .await?;
+            */
+        }
         
         Ok(())
     }
 
-    pub async fn read_users(self, login: &UserAuth, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_users(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
         if !login.is_authenticated {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
-        // TODO
+        let users = self.users
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
+
+        for user in users {
+            let id = user.id
+                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field"))?;
+
+            /*
+            sqlx::query_file!("src/sql/read-user.sql", conversation.id, login.email)
+                .execute(db_pool)
+                .await?;
+            */
+        }
 
         Ok(())
     }
