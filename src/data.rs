@@ -1,8 +1,9 @@
+use std::error::Error;
 use base64;
 use serde_json::Value;
 
 pub struct User {
-    pub id: Option<usize>,
+    pub id: Option<u64>,
     pub email: Option<String>,
     pub name: Option<String>,
     pub password: Option<String>,
@@ -10,43 +11,31 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(&self) -> Self {
-        Self{
-            id: self.id,
-
-            email: if let Some(d) = &self.email {
-                Some(String::from(d))
-            } else { None },
-
-            name: if let Some(d) = &self.name {
-                Some(String::from(d))
-            } else { None },
-
-            public_key: if let Some(d) = &self.public_key {
-                if let Ok(e) = base64::decode(d) {
-                    Some(e)
-                } else { None }
-            } else { None },
-
-            password: if let Some(d) = &self.password {
-                Some(String::from(d))
-            } else { None },
-        }
-    }
-
-    pub fn from_json(data: &Value) -> Self {
-        Self{
-            id: None,
-            email: None,
-            name: None,
-            password: None,
-            public_key: None,
-        }
+    pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
+        Ok(Self{
+            id: data["id"].as_u64(),
+            email: match data["email"].as_str() {
+                Some(d) => Some(String::from(d)),
+                None => None,
+            },
+            name: match data["name"].as_str() {
+                Some(d) => Some(String::from(d)),
+                None => None,
+            },
+            password: match data["password"].as_str() {
+                Some(d) => Some(String::from(d)),
+                None => None,
+            },
+            public_key: match data["publicKey"].as_str() {
+                Some(d) => Some(base64::decode(d)?),
+                None => None,
+            },
+        })
     }
 }
 
 pub struct Message {
-    pub id: Option<usize>,
+    pub id: Option<u64>,
     pub data: Option<Vec<u8>>,
     pub media_type: Option<Vec<u8>>,
     pub timestamp: Option<Vec<u8>>,
@@ -54,67 +43,42 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(&self) -> Self {
-        Message{
-            id: self.id,
-
-            data: if let Some(d) = &self.data {
-                if let Ok(e) = base64::decode(d) {
-                    Some(e)
-                } else { None }
-            } else { None },
-
-            media_type: if let Some(d) = &self.media_type {
-                if let Ok(e) = base64::decode(d) {
-                    Some(e)
-                } else { None }
-            } else { None },
-
-            timestamp: if let Some(d) = &self.timestamp {
-                if let Ok(e) = base64::decode(d) {
-                    Some(e)
-                } else { None }
-            } else { None },
-
-            signature: if let Some(d) = &self.signature {
-                if let Ok(e) = base64::decode(d) {
-                    Some(e)
-                } else { None }
-            } else { None },
-        }
-    }
-
-    pub fn from_json(data: &Value) -> Self {
-        Self{
-            id: None,
-            data: None,
-            media_type: None,
-            timestamp: None,
-            signature: None,
-        }
+    pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
+        Ok(Self{
+            id: data["id"].as_u64(),
+            data: match data["data"].as_str() {
+                Some(d) => Some(base64::decode(d)?),
+                None => None,
+            },
+            media_type: match data["mediaType"].as_str() {
+                Some(d) => Some(base64::decode(d)?),
+                None => None,
+            },
+            timestamp: match data["timestamp"].as_str() {
+                Some(d) => Some(base64::decode(d)?),
+                None => None,
+            },
+            signature: match data["signature"].as_str() {
+                Some(d) => Some(base64::decode(d)?),
+                None => None,
+            },
+        })
     }
 }
 
 pub struct Conversation {
-    pub id: Option<usize>,
-    pub name: Option<String>,
+    pub id: Option<u64>,
+    pub name: Option<Vec<u8>>,
 }
 
 impl Conversation {
-    pub fn new(&self) -> Self {
-        Conversation{
-            id: self.id,
-
-            name: if let Some(d) = &self.name {
-                Some(String::from(d))
-            } else { None },
-        }
-    }
-
-    pub fn from_json(data: &Value) -> Self {
-        Self{
-            id: None,
-            name: None,
-        }
+    pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
+        Ok(Self{
+            id: data["id"].as_u64(),
+            name: match data["name"].as_str() {
+                Some(d) => Some(base64::decode(d)?),
+                None => None,
+            },
+        })
     }
 }

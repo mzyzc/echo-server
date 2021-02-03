@@ -64,7 +64,7 @@ impl Request {
                 Some(d) => {
                     let mut users = Vec::new();
                     for item in d.iter() {
-                        let user = data::User::from_json(item);
+                        let user = data::User::from_json(item)?;
                         users.push(user);
                     };
                     Some(users)
@@ -75,7 +75,7 @@ impl Request {
                 Some(d) => {
                     let mut messages = Vec::new();
                     for item in d.iter() {
-                        let message = data::Message::from_json(item);
+                        let message = data::Message::from_json(item)?;
                         messages.push(message);
                     };
                     Some(messages)
@@ -86,7 +86,7 @@ impl Request {
                 Some(d) => {
                     let mut conversations = Vec::new();
                     for item in d.iter() {
-                        let conversation = data::Conversation::from_json(item);
+                        let conversation = data::Conversation::from_json(item)?;
                         conversations.push(conversation);
                     };
                     Some(conversations)
