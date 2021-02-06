@@ -1,4 +1,4 @@
-use crate::api::{Request, Operation, Target};
+use crate::api::request::{Request, Operation, Target};
 use crate::auth::Login;
 
 use std::error::Error;
@@ -23,7 +23,7 @@ pub async fn handle_request(data: &[u8], user: &mut Login, db_pool: &PgPool) -> 
         Operation::Create => {
             match request.target {
                 Target::Conversations => request.create_conversations(user, db_pool).await?,
-                Target::Messages => request.create_conversations(user, db_pool).await?,
+                Target::Messages => request.create_messages(user, db_pool).await?,
                 Target::Users => request.create_users(db_pool).await?,
             }
         }

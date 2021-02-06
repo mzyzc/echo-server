@@ -1,8 +1,7 @@
 mod api;
 mod auth;
-mod data;
 mod database;
-mod requests;
+mod handle;
 mod settings;
 mod tls;
 
@@ -77,7 +76,7 @@ async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &
             Ok(0) => break,
             Ok(n) => {
                 println!("{:?}", user.email);
-                let result = requests::handle_request(&buffer[..n], &mut user, db_pool).await;
+                let result = handle::handle_request(&buffer[..n], &mut user, db_pool).await;
                 if let Err(e) = result {
                     error!("{}", e);
                 }
