@@ -1,10 +1,13 @@
+use std::convert::TryFrom;
 use std::error::Error;
+use std::io::Error as ioErr;
+use std::io::ErrorKind as ioErrKind;
 use base64;
 use serde_json::Value;
 
 #[derive(Clone)]
 pub struct User {
-    pub id: Option<u64>,
+    pub id: Option<i32>,
     pub email: Option<String>,
     pub name: Option<String>,
     pub password: Option<String>,
@@ -14,7 +17,10 @@ pub struct User {
 impl User {
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
-            id: data["id"].as_u64(),
+            id: Some(i32::try_from(
+                data["id"].as_i64()
+                    .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?
+            )?),
             email: match data["email"].as_str() {
                 Some(d) => Some(String::from(d)),
                 None => None,
@@ -36,7 +42,7 @@ impl User {
 }
 
 pub struct Message {
-    pub id: Option<u64>,
+    pub id: Option<i32>,
     pub data: Option<Vec<u8>>,
     pub media_type: Option<Vec<u8>>,
     pub timestamp: Option<Vec<u8>>,
@@ -46,7 +52,10 @@ pub struct Message {
 impl Message {
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
-            id: data["id"].as_u64(),
+            id: Some(i32::try_from(
+                data["id"].as_i64()
+                    .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?
+            )?),
             data: match data["data"].as_str() {
                 Some(d) => Some(base64::decode(d)?),
                 None => None,
@@ -67,15 +76,19 @@ impl Message {
     }
 }
 
+#[derive(Clone)]
 pub struct Conversation {
-    pub id: Option<u64>,
+    pub id: Option<i32>,
     pub name: Option<Vec<u8>>,
 }
 
 impl Conversation {
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
-            id: data["id"].as_u64(),
+            id: Some(i32::try_from(
+                data["id"].as_i64()
+                    .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?
+            )?),
             name: match data["name"].as_str() {
                 Some(d) => Some(base64::decode(d)?),
                 None => None,

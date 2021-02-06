@@ -1,7 +1,5 @@
-INSERT INTO messages (data, media_type, timestamp, signature, sender)
-VALUES ($1, $2, $3, $4, (
-        SELECT id
-        FROM users
-        WHERE email = $5
-    )
+INSERT INTO messages (sender, data, media_type, timestamp, signature)
+VALUES (
+    (SELECT id FROM users WHERE email = $1),
+    $2, $3, $4, $5
 )
