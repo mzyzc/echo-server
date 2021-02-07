@@ -75,11 +75,9 @@ async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &
         match stream.read(&mut buffer).await {
             Ok(0) => break,
             Ok(n) => {
-                println!("{:?}", user.email);
                 let result = handle::handle_request(&buffer[..n], &mut user, db_pool).await;
-                if let Err(e) = result {
-                    error!("{}", e);
-                }
+                let response = handle::format_response(result.ok());
+                stream.write(response.as_bytes());
             },
             Err(_) => task::sleep(interval).await,
         }

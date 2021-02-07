@@ -1,4 +1,5 @@
 use crate::api::request::{Request, Operation, Target};
+use crate::api::response::Response;
 use crate::auth::Login;
 
 use std::error::Error;
@@ -7,13 +8,13 @@ use std::io::ErrorKind as ioErrKind;
 use std::str;
 use sqlx::PgPool;
 
-pub async fn handle_request(data: &[u8], user: &mut Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+pub async fn handle_request(data: &[u8], user: &mut Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
     // Prepare data
     let data = str::from_utf8(data)?;
     let request = Request::from_json(data)?;
 
     // Identify type of request
-    match request.operation {
+    let response = match request.operation {
         Operation::Verify => {
             match request.target {
                 Target::Users => request.verify_users(user, db_pool).await?,
@@ -46,5 +47,19 @@ pub async fn handle_request(data: &[u8], user: &mut Login, db_pool: &PgPool) -> 
         }
     };
 
-    Ok(())
+    Ok(response)
+}
+
+pub fn format_response(response: Option<Response>) -> String {
+    let response = match response {
+        Some(r) => r,
+        None => Response{
+            status: 0,
+            conversations: None,
+            messages: None,
+            users: None,
+        },
+    };
+
+    response.to_json()
 }
