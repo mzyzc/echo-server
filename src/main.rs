@@ -56,6 +56,7 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+// Handle incoming connections from clients
 async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);

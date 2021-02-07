@@ -17,6 +17,7 @@ pub struct User {
 }
 
 impl User {
+    // Create a user object from JSON
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
             id: match data["id"].as_i64() {
@@ -53,6 +54,7 @@ pub struct Message {
 }
 
 impl Message {
+    // Create a message object from JSON
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
             id: match data["id"].as_i64() {
@@ -90,6 +92,7 @@ pub struct Conversation {
 }
 
 impl Conversation {
+    // Create a conversation object from JSON
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
             id: match data["id"].as_i64() {

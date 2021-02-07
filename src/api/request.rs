@@ -32,6 +32,7 @@ pub struct Request {
 }
 
 impl Request {
+    // Separate operation and target from a space-delimited string
     fn split_function(function: &str) -> (String, String) {
         let split_func: Vec<&str> = function
             .split_ascii_whitespace()
@@ -40,6 +41,7 @@ impl Request {
         (split_func[0].to_owned(), split_func[1].to_owned())
     }
 
+    // Create a request object from JSON
     pub fn from_json(data: &str) -> Result<Self, Box<dyn Error>> {
         let data: Value = serde_json::from_str(data)?;
 
@@ -99,6 +101,7 @@ impl Request {
         Ok(request)
     }
 
+    // Authenticate a user for the duration of the session
     pub async fn verify_users(self, login: &mut Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Read remote data
         let users = self.users
@@ -134,6 +137,7 @@ impl Request {
         })
     }
 
+    // Add users to the database
     pub async fn create_users(self, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         let users = self.users
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
@@ -167,6 +171,7 @@ impl Request {
         })
     }
 
+    // Add user's conversations to the database
     pub async fn create_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
@@ -211,6 +216,7 @@ impl Request {
         })
     }
 
+    // Add messages from a conversation to the database
     pub async fn create_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
@@ -253,6 +259,7 @@ impl Request {
         })
     }
 
+    // Read a user's messages from the database
     pub async fn read_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
@@ -270,6 +277,7 @@ impl Request {
         })
     }
 
+    // Read messages in a conversation from the database
     pub async fn read_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
@@ -294,6 +302,7 @@ impl Request {
         })
     }
 
+    // Read users in a conversation from the database
     pub async fn read_users(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));

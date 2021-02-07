@@ -10,6 +10,7 @@ use rustls::{Certificate, PrivateKey};
 use rustls::{NoClientAuth, ServerConfig};
 use rustls_pemfile;
 
+// Create a TLS acceptor using a local certificate and key
 pub async fn get_acceptor() -> Result<TlsAcceptor, Box<dyn Error>> {
     let cert = get_cert(
         &env::var("TLS_CERT_PATH")?
@@ -25,6 +26,7 @@ pub async fn get_acceptor() -> Result<TlsAcceptor, Box<dyn Error>> {
     Ok(acceptor)
 }
 
+// Read a locally-stored certificate
 fn get_cert(path: &str) -> Result<Vec<Certificate>, Box<dyn Error>> {
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);
@@ -36,6 +38,7 @@ fn get_cert(path: &str) -> Result<Vec<Certificate>, Box<dyn Error>> {
     Ok(cert)
 }
 
+// Read a locally-stored private key
 fn get_key(path: &str) -> Result<PrivateKey, Box<dyn Error>> {
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);

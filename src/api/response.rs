@@ -10,6 +10,7 @@ pub struct Response {
 }
 
 impl Response {
+    // Format response as JSON
     pub fn to_json(&self) -> String {
         let users = &self.users_to_json();
         let messages = &self.messages_to_json();

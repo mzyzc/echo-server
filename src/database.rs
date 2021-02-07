@@ -5,6 +5,7 @@ use std::error::Error;
 use log::{info};
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
+// Set up a database for connections
 pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
     // Connect to database
     let max_conns: u32 = env::var("MAX_DB_CONNECTIONS")

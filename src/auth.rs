@@ -9,6 +9,7 @@ pub struct Login {
 }
 
 impl Login {
+    // Set a user as authenticated
     pub fn authenticate(&mut self, email: String) {
         self.email = Some(email);
         self.is_authenticated = true;
@@ -21,6 +22,7 @@ pub struct Password {
 }
 
 impl Password {
+    // Create a password hash from a string and an (optionally provided) salt
     pub fn hash(password: &str, salt: Option<&[u8]>) -> Result<Self, Box<dyn Error>> {
         // Use provided salt or generate a new one
         let salt = match salt {
@@ -44,6 +46,7 @@ impl Password {
         })
     }
 
+    // Check if a password matches the stored hash
     pub fn is_valid(&self, password: &str) -> Result<bool, Box<dyn Error>> {
         let hash = str::from_utf8(&self.hash)?;
         let result = argon2::verify_encoded(hash, password.as_bytes())?;

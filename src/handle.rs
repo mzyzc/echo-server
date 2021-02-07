@@ -8,6 +8,7 @@ use std::io::ErrorKind as ioErrKind;
 use std::str;
 use sqlx::PgPool;
 
+// Handle individual requests from clients
 pub async fn handle_request(data: &[u8], user: &mut Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
     // Prepare data
     let data = str::from_utf8(data)?;
@@ -50,6 +51,7 @@ pub async fn handle_request(data: &[u8], user: &mut Login, db_pool: &PgPool) -> 
     Ok(response)
 }
 
+// Format response as a string, using a default if none provided
 pub fn format_response(response: Option<Response>) -> String {
     let response = match response {
         Some(r) => r,
