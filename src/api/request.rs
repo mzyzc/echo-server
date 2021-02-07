@@ -243,6 +243,7 @@ impl Request {
             // Store user data
             sqlx::query_file!("src/sql/create-message.sql",
                     login.email,
+                    conversation_id,
                     data,
                     media_type,
                     timestamp,
@@ -287,10 +288,12 @@ impl Request {
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
         let conversation = conversations[0].clone();
 
-        let id = conversation.id
+        let conversation_id = conversation.id
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
 
-        let stream = sqlx::query_file!("src/sql/read-message.sql", login.email, id)
+        let stream = sqlx::query_file!("src/sql/read-message.sql",
+                login.email,
+                conversation_id)
             .fetch_one(db_pool)
             .await?;
 
@@ -312,10 +315,12 @@ impl Request {
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
         let conversation = conversations[0].clone();
 
-        let id = conversation.id
+        let conversation_id = conversation.id
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
 
-        let stream = sqlx::query_file!("src/sql/read-user.sql", login.email, id)
+        let stream = sqlx::query_file!("src/sql/read-user.sql",
+                login.email,
+                conversation_id)
             .fetch_one(db_pool)
             .await?;
 

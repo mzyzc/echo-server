@@ -2,7 +2,7 @@ use crate::settings;
 
 use std::env;
 use std::error::Error;
-use log::{info};
+use log::info;
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 // Set up a database for connections
