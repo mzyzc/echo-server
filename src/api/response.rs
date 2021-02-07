@@ -4,9 +4,9 @@ use serde_json::{Value, json};
 
 pub struct Response {
     pub status: u8,
-    users: Option<Vec<api::User>>,
-    messages: Option<Vec<api::Message>>,
-    conversations: Option<Vec<api::Conversation>>,
+    pub users: Option<Vec<api::User>>,
+    pub messages: Option<Vec<api::Message>>,
+    pub conversations: Option<Vec<api::Conversation>>,
 }
 
 impl Response {

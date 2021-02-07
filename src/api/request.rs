@@ -1,5 +1,6 @@
 use crate::api;
 use crate::auth::{Login, Password};
+use crate::api::response::Response;
 
 use std::error::Error;
 use std::io::Error as ioErr;
@@ -98,7 +99,7 @@ impl Request {
         Ok(request)
     }
 
-    pub async fn verify_users(self, login: &mut Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn verify_users(self, login: &mut Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Read remote data
         let users = self.users
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
@@ -125,10 +126,15 @@ impl Request {
             false => return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Invalid password"))),
         };
 
-        Ok(())
+        Ok(Response{
+            status: 1,
+            conversations: None,
+            messages: None,
+            users: None,
+        })
     }
 
-    pub async fn create_users(self, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn create_users(self, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         let users = self.users
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
 
@@ -153,10 +159,15 @@ impl Request {
                 .await?;
         };
 
-        Ok(())
+        Ok(Response{
+            status: 1,
+            conversations: None,
+            messages: None,
+            users: None,
+        })
     }
 
-    pub async fn create_conversations(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn create_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
@@ -192,10 +203,15 @@ impl Request {
                 .await?;
         };
 
-        Ok(())
+        Ok(Response{
+            status: 1,
+            conversations: None,
+            messages: None,
+            users: None,
+        })
     }
 
-    pub async fn create_messages(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn create_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
@@ -229,41 +245,32 @@ impl Request {
                 .await?;
         };
         
-        Ok(())
+        Ok(Response{
+            status: 1,
+            conversations: None,
+            messages: None,
+            users: None,
+        })
     }
 
-    pub async fn read_conversations(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
-        sqlx::query_file!("src/sql/read-conversation.sql", login.email)
-            .fetch_all(db_pool)
+        let stream = sqlx::query_file!("src/sql/read-conversation.sql", login.email)
+            .fetch_one(db_pool)
             .await?;
 
-        Ok(())
+        Ok(Response{
+            status: 1,
+            conversations: None,
+            messages: None,
+            users: None,
+        })
     }
 
-    pub async fn read_messages(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
-        if login.is_authenticated == false {
-            return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
-        }
-
-        let conversations = self.conversations
-            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
-        let conversation = conversations[0].clone();
-
-        let id = conversation.id
-            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
-
-        sqlx::query_file!("src/sql/read-message.sql", login.email, id)
-            .fetch_all(db_pool)
-            .await?;
-        
-        Ok(())
-    }
-
-    pub async fn read_users(self, login: &Login, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
+    pub async fn read_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
@@ -275,10 +282,39 @@ impl Request {
         let id = conversation.id
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
 
-        sqlx::query_file!("src/sql/read-user.sql", login.email, id)
-            .fetch_all(db_pool)
+        let stream = sqlx::query_file!("src/sql/read-message.sql", login.email, id)
+            .fetch_one(db_pool)
             .await?;
 
-        Ok(())
+        Ok(Response{
+            status: 1,
+            conversations: None,
+            messages: None,
+            users: None,
+        })
+    }
+
+    pub async fn read_users(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
+        if login.is_authenticated == false {
+            return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
+        }
+
+        let conversations = self.conversations
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
+        let conversation = conversations[0].clone();
+
+        let id = conversation.id
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
+
+        let stream = sqlx::query_file!("src/sql/read-user.sql", login.email, id)
+            .fetch_one(db_pool)
+            .await?;
+
+        Ok(Response{
+            status: 1,
+            conversations: None,
+            messages: None,
+            users: None,
+        })
     }
 }

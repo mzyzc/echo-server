@@ -19,10 +19,10 @@ pub struct User {
 impl User {
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
-            id: Some(i32::try_from(
-                data["id"].as_i64()
-                    .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?
-            )?),
+            id: match data["id"].as_i64() {
+                Some(d) => Some(i32::try_from(d)?),
+                None => None,
+            },
             email: match data["email"].as_str() {
                 Some(d) => Some(String::from(d)),
                 None => None,
@@ -55,10 +55,10 @@ pub struct Message {
 impl Message {
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
-            id: Some(i32::try_from(
-                data["id"].as_i64()
-                    .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?
-            )?),
+            id: match data["id"].as_i64() {
+                Some(d) => Some(i32::try_from(d)?),
+                None => None,
+            },
             data: match data["data"].as_str() {
                 Some(d) => Some(base64::decode(d)?),
                 None => None,
@@ -92,10 +92,10 @@ pub struct Conversation {
 impl Conversation {
     pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
         Ok(Self{
-            id: Some(i32::try_from(
-                data["id"].as_i64()
-                    .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?
-            )?),
+            id: match data["id"].as_i64() {
+                Some(d) => Some(i32::try_from(d)?),
+                None => None,
+            },
             name: match data["name"].as_str() {
                 Some(d) => Some(base64::decode(d)?),
                 None => None,
