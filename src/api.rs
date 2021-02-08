@@ -3,8 +3,6 @@ pub mod response;
 
 use std::convert::TryFrom;
 use std::error::Error;
-use std::io::Error as ioErr;
-use std::io::ErrorKind as ioErrKind;
 use base64;
 use serde_json::Value;
 #[derive(Clone)]

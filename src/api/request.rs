@@ -226,16 +226,16 @@ impl Request {
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'messages' list"))?;
         let conversations = self.conversations
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
-        let conversation = conversations[0].clone();
+        let conversation = &conversations[0];
 
         for message in messages {
-            let data = message.data.clone()
+            let data = message.data
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'data' field for 'message'"))?;
-            let media_type = message.media_type.clone()
+            let media_type = message.media_type
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'media_type' field for 'message'"))?;
-            let timestamp = message.timestamp.clone()
+            let timestamp = message.timestamp
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'timestamp' field for 'message'"))?;
-            let signature = message.signature.clone()
+            let signature = message.signature
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'signature' field for 'message'"))?;
             let conversation_id = conversation.id
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'message'"))?;
@@ -286,7 +286,7 @@ impl Request {
 
         let conversations = self.conversations
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
-        let conversation = conversations[0].clone();
+        let conversation = &conversations[0];
 
         let conversation_id = conversation.id
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
