@@ -313,7 +313,7 @@ impl Request {
 
         let conversations = self.conversations
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
-        let conversation = conversations[0].clone();
+        let conversation = &conversations[0];
 
         let conversation_id = conversation.id
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
