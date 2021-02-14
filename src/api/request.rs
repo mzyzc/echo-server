@@ -65,33 +65,30 @@ impl Request {
             },
             users: match data["users"].as_array() {
                 Some(d) => {
-                    let mut users = Vec::new();
-                    for item in d.iter() {
-                        let user = api::User::from_json(item)?;
-                        users.push(user);
-                    };
+                    let users = d
+                        .iter()
+                        .flat_map(|item| api::User::from_json(item))
+                        .collect();
                     Some(users)
                 },
                 None => None,
             },
             messages: match data["messages"].as_array() {
                 Some(d) => {
-                    let mut messages = Vec::new();
-                    for item in d.iter() {
-                        let message = api::Message::from_json(item)?;
-                        messages.push(message);
-                    };
+                    let messages = d
+                        .iter()
+                        .flat_map(|item| api::Message::from_json(item))
+                        .collect();
                     Some(messages)
                 },
                 None => None,
             },
             conversations: match data["conversations"].as_array() {
                 Some(d) => {
-                    let mut conversations = Vec::new();
-                    for item in d.iter() {
-                        let conversation = api::Conversation::from_json(item)?;
-                        conversations.push(conversation);
-                    };
+                    let conversations = d
+                        .iter()
+                        .flat_map(|item| api::Conversation::from_json(item))
+                        .collect();
                     Some(conversations)
                 },
                 None => None,
@@ -270,12 +267,14 @@ impl Request {
             .fetch_one(db_pool)
             .await?;
 
-        Ok(Response{
+        let response = Response{
             status: 1,
             conversations: None,
             messages: None,
             users: None,
-        })
+        };
+
+        Ok(response)
     }
 
     // Read messages in a conversation from the database
@@ -297,12 +296,14 @@ impl Request {
             .fetch_one(db_pool)
             .await?;
 
-        Ok(Response{
+        let response = Response{
             status: 1,
             conversations: None,
             messages: None,
             users: None,
-        })
+        };
+
+        Ok(response)
     }
 
     // Read users in a conversation from the database
@@ -324,11 +325,13 @@ impl Request {
             .fetch_one(db_pool)
             .await?;
 
-        Ok(Response{
+        let response = Response{
             status: 1,
             conversations: None,
             messages: None,
             users: None,
-        })
+        };
+
+        Ok(response)
     }
 }
