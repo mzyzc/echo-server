@@ -6,6 +6,7 @@ use std::error::Error;
 use base64;
 use serde_json::Value;
 #[derive(Clone)]
+
 pub struct User {
     pub id: Option<i32>,
     pub email: Option<String>,
