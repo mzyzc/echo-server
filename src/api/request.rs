@@ -1,5 +1,6 @@
 use crate::api;
 use crate::auth::{Login, Password};
+use crate::api::ApiObject;
 use crate::api::response::Response;
 
 use std::error::Error;
@@ -7,7 +8,9 @@ use std::io::Error as ioErr;
 use std::io::ErrorKind as ioErrKind;
 use serde_json::Value;
 use sqlx::PgPool;
+use log::debug;
 
+#[derive(Debug)]
 pub enum Operation {
     Create,
     Read,
@@ -16,6 +19,7 @@ pub enum Operation {
     Verify,
 }
 
+#[derive(Debug)]
 pub enum Target {
     Conversations,
     Messages,
@@ -23,6 +27,7 @@ pub enum Target {
 }
 
 // Canonical form of a request
+#[derive(Debug)]
 pub struct Request {
     pub operation: Operation,
     pub target: Target,
@@ -136,10 +141,12 @@ impl Request {
 
     // Add users to the database
     pub async fn create_users(self, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
+        // Authenticate user
         let users = self.users
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
 
         for user in users {
+            // Unpack request
             let email = user.email
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'email' field for 'user'"))?;
             let password = user.password
@@ -170,10 +177,12 @@ impl Request {
 
     // Add user's conversations to the database
     pub async fn create_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
+        // Authenticate user
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
+        // Unpack request
         let users = self.users
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'users' list"))?;
         let conversations = self.conversations
@@ -183,7 +192,6 @@ impl Request {
 
         let name = conversation.name
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'name' field for 'conversation'"))?;
-        let name = std::str::from_utf8(&name)?;
 
         // Create conversation
         sqlx::query_file!("src/sql/create-conversation-1.sql", name)
@@ -215,10 +223,12 @@ impl Request {
 
     // Add messages from a conversation to the database
     pub async fn create_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
+        // Authenticate user
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
+        // Unpack request
         let messages = self.messages
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'messages' list"))?;
         let conversations = self.conversations
@@ -259,13 +269,20 @@ impl Request {
 
     // Read a user's messages from the database
     pub async fn read_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
+        // Authenticate user
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
+        // Read from database
         let stream = sqlx::query_file!("src/sql/read-conversation.sql", login.email)
-            .fetch_one(db_pool)
+            .fetch_all(db_pool)
             .await?;
+
+        // Format response
+        for thing in stream.iter() {
+            debug!("conversation: {:?}", thing);
+        }
 
         let response = Response{
             status: 1,
@@ -279,10 +296,12 @@ impl Request {
 
     // Read messages in a conversation from the database
     pub async fn read_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
+        // Authenticate user
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
+        // Unpack request
         let conversations = self.conversations
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
         let conversation = &conversations[0];
@@ -290,11 +309,17 @@ impl Request {
         let conversation_id = conversation.id
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
 
+        // Read from database
         let stream = sqlx::query_file!("src/sql/read-message.sql",
                 login.email,
                 conversation_id)
-            .fetch_one(db_pool)
+            .fetch_all(db_pool)
             .await?;
+
+        // Format response
+        for thing in stream.iter() {
+            debug!("messages: {:?}", thing);
+        }
 
         let response = Response{
             status: 1,
@@ -308,10 +333,12 @@ impl Request {
 
     // Read users in a conversation from the database
     pub async fn read_users(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
+        // Authenticate user
         if login.is_authenticated == false {
             return Err(Box::new(ioErr::new(ioErrKind::PermissionDenied, "Not authenticated")));
         }
 
+        // Unpack request
         let conversations = self.conversations
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
         let conversation = &conversations[0];
@@ -319,11 +346,17 @@ impl Request {
         let conversation_id = conversation.id
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
 
+        // Read from database
         let stream = sqlx::query_file!("src/sql/read-user.sql",
                 login.email,
                 conversation_id)
-            .fetch_one(db_pool)
+            .fetch_all(db_pool)
             .await?;
+
+        // Format response
+        for thing in stream.iter() {
+            debug!("users: {:?}", thing);
+        }
 
         let response = Response{
             status: 1,

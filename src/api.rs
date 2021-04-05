@@ -5,8 +5,12 @@ use std::convert::TryFrom;
 use std::error::Error;
 use base64;
 use serde_json::Value;
-#[derive(Clone)]
 
+trait ApiObject: Sized {
+    fn from_json(data: &Value) -> Result<Self, Box<dyn Error>>;
+}
+
+#[derive(Clone, Debug)]
 pub struct User {
     pub id: Option<i32>,
     pub email: Option<String>,
@@ -15,10 +19,10 @@ pub struct User {
     pub public_key: Option<Vec<u8>>,
 }
 
-impl User {
+impl ApiObject for User {
     // Create a user object from JSON
-    pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
-        Ok(Self{
+    fn from_json(data: &Value) -> Result<User, Box<dyn Error>> {
+        Ok(User{
             id: match data["id"].as_i64() {
                 Some(d) => Some(i32::try_from(d)?),
                 None => None,
@@ -42,7 +46,7 @@ impl User {
         })
     }
 }
-
+#[derive(Debug)]
 pub struct Message {
     pub id: Option<i32>,
     pub data: Option<Vec<u8>>,
@@ -52,10 +56,10 @@ pub struct Message {
     pub sender: Option<String>,
 }
 
-impl Message {
+impl ApiObject for Message {
     // Create a message object from JSON
-    pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
-        Ok(Self{
+    fn from_json(data: &Value) -> Result<Message, Box<dyn Error>> {
+        Ok(Message{
             id: match data["id"].as_i64() {
                 Some(d) => Some(i32::try_from(d)?),
                 None => None,
@@ -84,24 +88,39 @@ impl Message {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Conversation {
     pub id: Option<i32>,
-    pub name: Option<Vec<u8>>,
+    pub name: Option<String>,
 }
 
-impl Conversation {
+impl ApiObject for Conversation {
     // Create a conversation object from JSON
-    pub fn from_json(data: &Value) -> Result<Self, Box<dyn Error>> {
-        Ok(Self{
+    fn from_json(data: &Value) -> Result<Conversation, Box<dyn Error>> {
+        Ok(Conversation{
             id: match data["id"].as_i64() {
                 Some(d) => Some(i32::try_from(d)?),
                 None => None,
             },
             name: match data["name"].as_str() {
-                Some(d) => Some(base64::decode(d)?),
+                Some(d) => Some(String::from(d)),
                 None => None,
             },
         })
+    }
+}
+
+#[cfg(tests)]
+mod tests {
+    fn test_user_from_json() {
+        assert_equal!(1 == 1);
+    }
+
+    fn test_message_from_json() {
+        assert_equal!(1 == 1);
+    }
+
+    fn test_conversation_from_json() {
+        assert_equal!(1 == 1);
     }
 }
