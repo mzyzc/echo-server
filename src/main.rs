@@ -22,16 +22,18 @@ async fn main() -> std::io::Result<()> {
     let pool = database::init_db().await
         .expect("Could not initialize database");
 
-    // Listen for incoming connections
+    // Choose a socket address
     let socket_addr: SocketAddr = format!("{}:{}",
             env::var("IP_ADDRESS").unwrap_or(String::from("[::]")),
             env::var("PORT_NUMBER").unwrap_or(String::from("63100")))
         .parse()
         .expect("Could not parse socket address");
 
+    // Set up TLS
     let acceptor = tls::get_acceptor().await
         .expect("Could not accept TLS handshake");
 
+    // Listen for incoming connections
     let listener = TcpListener::bind(socket_addr).await?;
     let mut incoming = listener.incoming();
 
