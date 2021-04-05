@@ -54,3 +54,28 @@ impl Password {
         Ok(result)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::auth::Password;
+
+    #[test]
+    fn test_hash() {
+        let passwords = vec!["8nLpNaeJ", "9poyvjJN", "L3Chj2ne"];
+        let salt = b"samplesalt";
+        let test_hashes = vec![
+            "$argon2i$v=19$m=4096,t=3,p=1$c2FtcGxlc2FsdA$75kN1JTjZ+AwNg3f5PvLU4Dp+4biUIo2BOqo9dYdXVE".to_string().into_bytes(),
+            "$argon2i$v=19$m=4096,t=3,p=1$c2FtcGxlc2FsdA$yU0Lgj66mhc2a7HT6z9RTP6myZgssy99snipJyrAku4".to_string().into_bytes(),
+            "$argon2i$v=19$m=4096,t=3,p=1$c2FtcGxlc2FsdA$d9UXA+y9LsGj89WB/3DNV6JpDwDr4fyo2rbjo02vilk".to_string().into_bytes(),
+        ];
+
+        let hashes: Vec<Password> = passwords
+            .iter()
+            .map(|x| Password::hash(x, Some(salt)).unwrap())
+            .collect();
+
+        assert_eq!(hashes[0].hash, test_hashes[0]);
+        assert_eq!(hashes[1].hash, test_hashes[1]);
+        assert_eq!(hashes[2].hash, test_hashes[2]);
+    }
+}
