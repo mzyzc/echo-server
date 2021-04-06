@@ -1,10 +1,3 @@
-mod api;
-mod auth;
-mod database;
-mod handle;
-mod settings;
-mod tls;
-
 use std::env;
 use std::net::SocketAddr;
 use async_std::prelude::*;
@@ -13,13 +6,15 @@ use async_std::task;
 use dotenv;
 use log::{error, info};
 
+use echo_server;
+
 #[async_std::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     env_logger::init();
 
     // Prepare database
-    let pool = database::init_db().await
+    let pool = echo_server::database::init_db().await
         .expect("Could not initialize database");
 
     // Choose a socket address
@@ -30,7 +25,7 @@ async fn main() -> std::io::Result<()> {
         .expect("Could not parse socket address");
 
     // Set up TLS
-    let acceptor = tls::get_acceptor().await
+    let acceptor = echo_server::tls::get_acceptor().await
         .expect("Could not accept TLS handshake");
 
     // Listen for incoming connections
@@ -47,7 +42,7 @@ async fn main() -> std::io::Result<()> {
         info!("Successful connection from {}", stream.peer_addr()?);
 
         task::spawn(async move {
-            let result = handle::handle_connection(stream, &acceptor, &pool).await;
+            let result = echo_server::handle_connection(stream, &acceptor, &pool).await;
 
             if let Err(e) = result {
                 error!("{}", e);

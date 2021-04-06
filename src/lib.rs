@@ -1,6 +1,12 @@
+pub mod database;
+pub mod tls;
+mod api;
+mod auth;
+mod settings;
+
 use crate::api::request::{Request, Operation, Target};
 use crate::api::response::Response;
-use crate::auth;
+//use crate::auth;
 
 use std::error::Error;
 use std::io::Error as ioErr;
@@ -13,7 +19,6 @@ use async_std::net::TcpStream;
 use async_tls::TlsAcceptor;
 use log::{error, info};
 use sqlx::PgPool;
-
 
 // Handle incoming connections from clients
 pub async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
