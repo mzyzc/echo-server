@@ -10,7 +10,7 @@ use serde_json::Value;
 use sqlx::PgPool;
 use log::debug;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Operation {
     Create,
     Read,
@@ -19,7 +19,7 @@ pub enum Operation {
     Verify,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Target {
     Conversations,
     Messages,
@@ -366,5 +366,42 @@ impl Request {
         };
 
         Ok(response)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::request::{Request, Operation, Target};
+    use serde_json::json;
+
+    #[test]
+    fn test_request_from_json() {
+        let json = [
+            json!({"function": "CREATE USERS"}).to_string(),
+            json!({"function": "READ MESSAGES"}).to_string(),
+            json!({"function": "UPDATE CONVERSATIONS"}).to_string(),
+            json!({"function": "DELETE MESSAGES"}).to_string(),
+            json!({"function": "VERIFY USERS"}).to_string(),
+        ];
+
+        let requests: Vec<Request> = json
+            .iter()
+            .map(|req| Request::from_json(&req).unwrap())
+            .collect();
+
+        assert_eq!(requests[0].operation, Operation::Create);
+        assert_eq!(requests[0].target, Target::Users);
+
+        assert_eq!(requests[1].operation, Operation::Read);
+        assert_eq!(requests[1].target, Target::Messages);
+
+        assert_eq!(requests[2].operation, Operation::Update);
+        assert_eq!(requests[2].target, Target::Conversations);
+
+        assert_eq!(requests[3].operation, Operation::Delete);
+        assert_eq!(requests[3].target, Target::Messages);
+
+        assert_eq!(requests[4].operation, Operation::Verify);
+        assert_eq!(requests[4].target, Target::Users);
     }
 }

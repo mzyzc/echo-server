@@ -110,17 +110,96 @@ impl ApiObject for Conversation {
     }
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
+    use crate::api::{User, Message, Conversation};
+    use crate::api::ApiObject;
+    use serde_json::json;
+
+    #[test]
     fn test_user_from_json() {
-        assert_equal!(1 == 1);
+        let json = [
+            json!({
+                "id": 1,
+                "email": "1@example.com",
+                "name": "Example User",
+                "password": "pass",
+                "publicKey": "a2V5",
+            }),
+            json!({}),
+        ];
+
+        let users = [
+            User::from_json(&json[0]).unwrap(),
+            User::from_json(&json[1]).unwrap(),
+        ];
+
+        assert_eq!(users[0].id, Some(1));
+        assert_eq!(users[0].email, Some(String::from("1@example.com")));
+        assert_eq!(users[0].name, Some(String::from("Example User")));
+        assert_eq!(users[0].password, Some(String::from("pass")));
+        assert_eq!(users[0].public_key, Some(String::from("key").into_bytes()));
+
+        assert_eq!(users[1].id, None);
+        assert_eq!(users[1].email, None);
+        assert_eq!(users[1].name, None);
+        assert_eq!(users[1].password, None);
+        assert_eq!(users[1].public_key, None);
     }
 
+    #[test]
     fn test_message_from_json() {
-        assert_equal!(1 == 1);
+        let json = [
+            json!({
+                "id": 1,
+                "data": "ZGF0YQ==",
+                "mediaType": "dGV4dC9wbGFpbg==",
+                "timestamp": "dGltZXN0YW1w",
+                "signature": "c2lnbmF0dXJl",
+                "sender": "1@example.com",
+            }),
+            json!({}),
+        ];
+
+        let messages = [
+            Message::from_json(&json[0]).unwrap(),
+            Message::from_json(&json[1]).unwrap(),
+        ];
+
+        assert_eq!(messages[0].id, Some(1));
+        assert_eq!(messages[0].data, Some(String::from("data").into_bytes()));
+        assert_eq!(messages[0].media_type, Some(String::from("text/plain").into_bytes()));
+        assert_eq!(messages[0].timestamp, Some(String::from("timestamp").into_bytes()));
+        assert_eq!(messages[0].signature, Some(String::from("signature").into_bytes()));
+        assert_eq!(messages[0].sender, Some(String::from("1@example.com")));
+
+        assert_eq!(messages[1].id, None);
+        assert_eq!(messages[1].data, None);
+        assert_eq!(messages[1].media_type, None);
+        assert_eq!(messages[1].timestamp, None);
+        assert_eq!(messages[1].signature, None);
+        assert_eq!(messages[1].sender, None);
     }
 
+    #[test]
     fn test_conversation_from_json() {
-        assert_equal!(1 == 1);
+        let json = [
+            json!({
+                "id": 1,
+                "name": "Example Conversation",
+            }),
+            json!({}),
+        ];
+
+        let conversations = [
+            Conversation::from_json(&json[0]).unwrap(),
+            Conversation::from_json(&json[1]).unwrap(),
+        ];
+
+        assert_eq!(conversations[0].id, Some(1));
+        assert_eq!(conversations[0].name, Some(String::from("Example Conversation")));
+
+        assert_eq!(conversations[1].id, None);
+        assert_eq!(conversations[1].name, None);
     }
 }

@@ -9,3 +9,18 @@ pub fn is_enabled(setting: &str) -> bool {
     }
     false
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::settings;
+    use std::env;
+
+    #[test]
+    fn test_is_enabled() {
+        env::set_var("ON", "1");
+        env::set_var("OFF", "0");
+
+        assert_eq!(settings::is_enabled("ON"), true);
+        assert_eq!(settings::is_enabled("OFF"), false);
+    }
+}

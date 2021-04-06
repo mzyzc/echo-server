@@ -78,4 +78,14 @@ mod tests {
         assert_eq!(hashes[1].hash, test_hashes[1]);
         assert_eq!(hashes[2].hash, test_hashes[2]);
     }
+
+    #[test]
+    fn test_is_valid() {
+        let password = "k2uEa77H";
+        let salt = b"samplesalt";
+
+        let hash = Password::hash(password, Some(salt)).unwrap();
+
+        assert_eq!(hash.is_valid(password).unwrap(), true);
+    }
 }
