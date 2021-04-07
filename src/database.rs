@@ -30,7 +30,7 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
     Ok(pool)
 }
 
-async fn create_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
+async fn drop_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
     sqlx::query_file!("src/sql/tables/drop.sql")
         .execute(pool)
         .await?;
@@ -38,8 +38,7 @@ async fn create_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
     info!("Existing tables dropped");
     Ok(())
 }
-
-async fn drop_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
+async fn create_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
     sqlx::query_file!("src/sql/tables/users.sql")
         .execute(pool)
         .await?;
