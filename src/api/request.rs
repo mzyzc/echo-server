@@ -6,9 +6,9 @@ use crate::api::response::Response;
 use std::error::Error;
 use std::io::Error as ioErr;
 use std::io::ErrorKind as ioErrKind;
+use api::{Conversation, Message, User};
 use serde_json::Value;
 use sqlx::PgPool;
-use log::debug;
 
 #[derive(Debug, PartialEq)]
 pub enum Operation {
@@ -284,13 +284,17 @@ impl Request {
             .await?;
 
         // Format response
-        for thing in stream.iter() {
-            debug!("conversation: {:?}", thing);
-        }
+        let conversations: Vec<Conversation> = stream
+            .iter()
+            .map(|c| Conversation{
+                id: Some(c.id),
+                name: Some(c.name.to_owned())
+            })
+            .collect();
 
         let response = Response{
             status: 1,
-            conversations: None,
+            conversations: Some(conversations),
             messages: None,
             users: None,
         };
@@ -321,14 +325,22 @@ impl Request {
             .await?;
 
         // Format response
-        for thing in stream.iter() {
-            debug!("messages: {:?}", thing);
-        }
+        let messages: Vec<Message> = stream
+            .iter()
+            .map(|m| Message{
+                id: None,
+                data: Some(m.data.to_owned()),
+                media_type: m.media_type.to_owned(),
+                timestamp: m.timestamp.to_owned(),
+                signature: m.signature.to_owned(),
+                sender: Some(m.email.to_owned()),
+            })
+            .collect();
 
         let response = Response{
             status: 1,
             conversations: None,
-            messages: None,
+            messages: Some(messages),
             users: None,
         };
 
@@ -358,15 +370,22 @@ impl Request {
             .await?;
 
         // Format response
-        for thing in stream.iter() {
-            debug!("users: {:?}", thing);
-        }
+        let users: Vec<User> = stream
+            .iter()
+            .map(|u| User{
+                id: None,
+                email: Some(u.email.to_owned()),
+                name: None,
+                password: None,
+                public_key: Some(u.public_key.to_owned()),
+            })
+            .collect();
 
         let response = Response{
             status: 1,
             conversations: None,
             messages: None,
-            users: None,
+            users: Some(users),
         };
 
         Ok(response)
