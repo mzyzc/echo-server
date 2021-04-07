@@ -58,7 +58,7 @@ impl Request {
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Invalid request function"))?)?;
 
         let request = Self{
-            operation: match operation.as_ref() {
+            operation: match operation.to_uppercase().as_ref() {
                 "VERIFY" => Operation::Verify,
                 "CREATE" => Operation::Create,
                 "READ" => Operation::Read,
@@ -66,7 +66,7 @@ impl Request {
                 "DELETE" => Operation::Delete,
                 _ => return Err(Box::new(ioErr::new(ioErrKind::InvalidInput, "Unknown request"))),
             },
-            target: match target.as_ref() {
+            target: match target.to_uppercase().as_ref() {
                 "CONVERSATIONS" => Target::Conversations,
                 "MESSAGES" => Target::Messages,
                 "USERS" => Target::Users,
