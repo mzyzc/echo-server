@@ -238,6 +238,8 @@ impl Request {
         let conversations = self.conversations
             .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'conversations' list"))?;
         let conversation = &conversations[0];
+        let conversation_id = conversation.id
+            .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'conversation'"))?;
 
         for message in messages {
             let data = message.data
@@ -248,8 +250,6 @@ impl Request {
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'timestamp' field for 'message'"))?;
             let signature = message.signature
                 .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'signature' field for 'message'"))?;
-            let conversation_id = conversation.id
-                .ok_or_else(|| ioErr::new(ioErrKind::InvalidInput, "Missing 'id' field for 'message'"))?;
 
             // Store user data
             sqlx::query_file!("src/sql/create-message.sql",
