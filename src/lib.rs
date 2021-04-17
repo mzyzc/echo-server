@@ -47,13 +47,13 @@ pub async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_poo
                 }
 
                 let response = format_response(result.ok());
-                stream.write(response.as_bytes());
+                task::block_on(stream.write_all(response.as_bytes()))?;
+                stream.flush();
             },
             Err(_) => task::sleep(interval).await,
         }
     }
 
-    stream.flush();
     info!("Disconnected {}", address);
     Ok(())
 }
