@@ -10,6 +10,7 @@ use api::{Conversation, Message, User};
 use serde_json::Value;
 use sqlx::PgPool;
 
+/// An action that a request wants to take
 #[derive(Debug, PartialEq)]
 pub enum Operation {
     Create,
@@ -19,6 +20,7 @@ pub enum Operation {
     Verify,
 }
 
+/// An entity that a request wants to act on
 #[derive(Debug, PartialEq)]
 pub enum Target {
     Conversations,
@@ -26,7 +28,7 @@ pub enum Target {
     Users,
 }
 
-// Canonical form of a request
+/// A request sent by a client
 #[derive(Debug)]
 pub struct Request {
     pub operation: Operation,
@@ -37,7 +39,7 @@ pub struct Request {
 }
 
 impl Request {
-    // Separate operation and target from a space-delimited string
+    /// Separate operation and target from a space-delimited string
     fn split_function(function: &str) -> Result<(String, String), Box<dyn Error>> {
         let split_func: Vec<&str> = function
             .split_ascii_whitespace()
@@ -50,7 +52,7 @@ impl Request {
         Ok((split_func[0].to_owned(), split_func[1].to_owned()))
     }
 
-    // Create a request object from JSON
+    /// Create a request object from JSON
     pub fn from_json(data: &str) -> Result<Self, Box<dyn Error>> {
         let data: Value = serde_json::from_str(data)?;
 
@@ -107,7 +109,7 @@ impl Request {
         Ok(request)
     }
 
-    // Authenticate a user for the duration of the session
+    /// Authenticate a user for the duration of the session
     pub async fn verify_users(self, login: &mut Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Read remote data
         let users = self.users
@@ -143,7 +145,7 @@ impl Request {
         })
     }
 
-    // Add users to the database
+    /// Add users to the database
     pub async fn create_users(self, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Authenticate user
         let users = self.users
@@ -179,7 +181,7 @@ impl Request {
         })
     }
 
-    // Add user's conversations to the database
+    /// Add user's conversations to the database
     pub async fn create_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Authenticate user
         if login.is_authenticated == false {
@@ -225,7 +227,7 @@ impl Request {
         })
     }
 
-    // Add messages from a conversation to the database
+    /// Add messages from a conversation to the database
     pub async fn create_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Authenticate user
         if login.is_authenticated == false {
@@ -271,7 +273,7 @@ impl Request {
         })
     }
 
-    // Read a user's messages from the database
+    /// Read a user's messages from the database
     pub async fn read_conversations(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Authenticate user
         if login.is_authenticated == false {
@@ -302,7 +304,7 @@ impl Request {
         Ok(response)
     }
 
-    // Read messages in a conversation from the database
+    /// Read messages in a conversation from the database
     pub async fn read_messages(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Authenticate user
         if login.is_authenticated == false {
@@ -347,7 +349,7 @@ impl Request {
         Ok(response)
     }
 
-    // Read users in a conversation from the database
+    /// Read users in a conversation from the database
     pub async fn read_users(self, login: &Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
         // Authenticate user
         if login.is_authenticated == false {

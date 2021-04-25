@@ -20,7 +20,7 @@ use async_tls::TlsAcceptor;
 use log::{error, info};
 use sqlx::PgPool;
 
-// Handle incoming connections from clients
+/// Handle incoming connections from clients
 pub async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_pool: &PgPool) -> Result<(), Box<dyn Error>> {
     let mut buffer = [0; 1024];
     let interval = time::Duration::from_millis(500);
@@ -58,7 +58,7 @@ pub async fn handle_connection(stream: TcpStream, acceptor: &TlsAcceptor, db_poo
     Ok(())
 }
 
-// Handle individual requests from clients
+/// Handle a request from a client
 async fn handle_request(data: &[u8], user: &mut auth::Login, db_pool: &PgPool) -> Result<Response, Box<dyn Error>> {
     // Prepare data
     let data = str::from_utf8(data)?;
@@ -101,7 +101,7 @@ async fn handle_request(data: &[u8], user: &mut auth::Login, db_pool: &PgPool) -
     Ok(response)
 }
 
-// Format a response from the input
+/// Format an response as JSON or use a default if none is provided
 fn format_response(response: Option<Response>) -> String {
     let response = match response {
         Some(r) => r,

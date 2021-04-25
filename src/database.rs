@@ -5,7 +5,7 @@ use std::error::Error;
 use log::info;
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
-// Set up a database for connections
+/// Set up a database to accept connections
 pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
     // Connect to database
     let max_conns: u32 = env::var("MAX_DB_CONNECTIONS")
@@ -30,6 +30,7 @@ pub async fn init_db() -> Result<Pool<Postgres>, Box<dyn Error>> {
     Ok(pool)
 }
 
+/// Drop all existing tables in a database
 async fn drop_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
     sqlx::query_file!("src/sql/tables/drop.sql")
         .execute(pool)
@@ -38,6 +39,8 @@ async fn drop_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
     info!("Existing tables dropped");
     Ok(())
 }
+
+/// Create all necessary tables in a database
 async fn create_tables(pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
     sqlx::query_file!("src/sql/tables/users.sql")
         .execute(pool)

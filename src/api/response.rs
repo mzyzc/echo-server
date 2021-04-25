@@ -2,6 +2,7 @@ use crate::api;
 
 use serde_json::{Value, json};
 
+// A server response to a client's request
 pub struct Response {
     pub status: u8,
     pub users: Option<Vec<api::User>>,
@@ -10,7 +11,7 @@ pub struct Response {
 }
 
 impl Response {
-    // Format response as JSON
+    /// Format response as JSON
     pub fn to_json(&self) -> String {
         let users = &self.users_to_json();
         let messages = &self.messages_to_json();
@@ -24,7 +25,7 @@ impl Response {
         }).to_string()
     }
 
-    // Format user array as JSON
+    /// Format user array as JSON
     fn users_to_json(&self) -> Option<Value> {
         match &self.users {
             Some(users) => {
@@ -42,7 +43,7 @@ impl Response {
         }
     }
 
-    // Format message array as JSON
+    /// Format message array as JSON
     fn messages_to_json(&self) -> Option<Value> {
         match &self.messages {
             Some(messages) => {
@@ -62,7 +63,7 @@ impl Response {
         }
     }
 
-    // Format conversation array as JSON
+    /// Format conversation array as JSON
     fn conversations_to_json(&self) -> Option<Value> {
         match &self.conversations {
             Some(conversations) => {

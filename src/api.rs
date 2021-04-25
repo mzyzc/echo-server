@@ -10,6 +10,7 @@ trait ApiObject: Sized {
     fn from_json(data: &Value) -> Result<Self, Box<dyn Error>>;
 }
 
+/// A target representing a user on the server
 #[derive(Clone, Debug)]
 pub struct User {
     pub id: Option<i32>,
@@ -20,7 +21,7 @@ pub struct User {
 }
 
 impl ApiObject for User {
-    // Create a user object from JSON
+    /// Create a user object from JSON
     fn from_json(data: &Value) -> Result<User, Box<dyn Error>> {
         Ok(User{
             id: match data["id"].as_i64() {
@@ -46,6 +47,8 @@ impl ApiObject for User {
         })
     }
 }
+
+/// A target representing a message on the server
 #[derive(Debug)]
 pub struct Message {
     pub id: Option<i32>,
@@ -57,7 +60,7 @@ pub struct Message {
 }
 
 impl ApiObject for Message {
-    // Create a message object from JSON
+    /// Create a message object from JSON
     fn from_json(data: &Value) -> Result<Message, Box<dyn Error>> {
         Ok(Message{
             id: match data["id"].as_i64() {
@@ -88,6 +91,7 @@ impl ApiObject for Message {
     }
 }
 
+/// A target representing a conversation on the server
 #[derive(Clone, Debug)]
 pub struct Conversation {
     pub id: Option<i32>,
@@ -95,7 +99,7 @@ pub struct Conversation {
 }
 
 impl ApiObject for Conversation {
-    // Create a conversation object from JSON
+    /// Create a conversation object from JSON
     fn from_json(data: &Value) -> Result<Conversation, Box<dyn Error>> {
         Ok(Conversation{
             id: match data["id"].as_i64() {
