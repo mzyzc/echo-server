@@ -3,5 +3,10 @@ FROM messages
 JOIN participants ON participants.id = messages.sender
 JOIN users ON users.id = participants.identity
 JOIN conversations ON conversations.id = participants.conversation
-WHERE (users.email = $1)
-AND (conversations.id = $2)
+WHERE (conversations.id = $2)
+AND ($2 IN (
+    SELECT conversation
+    FROM participants
+    JOIN users ON users.id = participants.identity
+    WHERE users.email = $1
+))
