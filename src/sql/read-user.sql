@@ -3,7 +3,7 @@ FROM users
 JOIN participants ON participants.identity = users.id
 JOIN conversations ON conversations.id = participants.conversation
 WHERE (conversations.id = $2)
-AND ($2 = (
+AND ($2 IN (
     SELECT conversation
     FROM participants
     JOIN users ON users.id = participants.identity
